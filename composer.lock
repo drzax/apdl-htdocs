@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "888dbaad4b00d50896becbd8b8c0ab7f",
+    "hash": "2eaa01dd4cab6e5fb0b6ab8e571e38ef",
     "packages": [
         {
             "name": "composer/installers",
@@ -76,6 +76,50 @@
                 "zend"
             ],
             "time": "2013-06-20 02:36:19"
+        },
+        {
+            "name": "everyman/neo4jphp",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jadell/neo4jphp.git",
+                "reference": "70cb6acc7d822f4c18a86eb04b289356668ce4ad"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jadell/neo4jphp/zipball/70cb6acc7d822f4c18a86eb04b289356668ce4ad",
+                "reference": "70cb6acc7d822f4c18a86eb04b289356668ce4ad",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Everyman\\Neo4j": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Josh Adell",
+                    "email": "josh.adell@gmail.com",
+                    "homepage": "http://joshadell.com"
+                }
+            ],
+            "description": "Wrapper for the Neo4j graph database REST interface",
+            "homepage": "http://github.com/jadell/neo4jphp/wiki",
+            "keywords": [
+                "database",
+                "graph",
+                "neo4j"
+            ],
+            "time": "2013-03-07 01:50:01"
         },
         {
             "name": "facebook/php-sdk",
@@ -223,7 +267,8 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "silverstripe/cms": 20,
-        "silverstripe/framework": 20
+        "silverstripe/framework": 20,
+        "everyman/neo4jphp": 20
     },
     "platform": {
         "php": ">=5.3.2"
