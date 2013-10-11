@@ -1,0 +1,7 @@
+---
+Name: personaroutes
+After: framework/routes#coreroutes
+---
+Director:
+  rules:
+    'persona//$Action' : 'PersonaVerifier'
