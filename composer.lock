@@ -3,20 +3,20 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "2eaa01dd4cab6e5fb0b6ab8e571e38ef",
+    "hash": "4f7dabd97bcaa14266d7a9a7366683ea",
     "packages": [
         {
             "name": "composer/installers",
-            "version": "v1.0.4",
+            "version": "v1.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/installers.git",
-                "reference": "v1.0.4"
+                "reference": "b3bd071ea114a57212c75aa6a2eef5cfe0cc798f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/installers/zipball/v1.0.4",
-                "reference": "v1.0.4",
+                "url": "https://api.github.com/repos/composer/installers/zipball/b3bd071ea114a57212c75aa6a2eef5cfe0cc798f",
+                "reference": "b3bd071ea114a57212c75aa6a2eef5cfe0cc798f",
                 "shasum": ""
             },
             "replace": {
@@ -46,13 +46,14 @@
                 {
                     "name": "Kyle Robinson Young",
                     "email": "kyle@dontkry.com",
-                    "homepage": "http://dontkry.com",
+                    "homepage": "https://github.com/shama",
                     "role": "Developer"
                 }
             ],
             "description": "A multi-framework Composer library installer",
             "homepage": "http://composer.github.com/installers/",
             "keywords": [
+                "TYPO3 CMS",
                 "TYPO3 Flow",
                 "TYPO3 Neos",
                 "agl",
@@ -75,7 +76,7 @@
                 "wordpress",
                 "zend"
             ],
-            "time": "2013-06-20 02:36:19"
+            "time": "2013-08-20 04:37:09"
         },
         {
             "name": "everyman/neo4jphp",
@@ -83,12 +84,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/jadell/neo4jphp.git",
-                "reference": "70cb6acc7d822f4c18a86eb04b289356668ce4ad"
+                "reference": "50aeb79cacaa84b443c3aacd94611d6fd5e583a9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jadell/neo4jphp/zipball/70cb6acc7d822f4c18a86eb04b289356668ce4ad",
-                "reference": "70cb6acc7d822f4c18a86eb04b289356668ce4ad",
+                "url": "https://api.github.com/repos/jadell/neo4jphp/zipball/50aeb79cacaa84b443c3aacd94611d6fd5e583a9",
+                "reference": "50aeb79cacaa84b443c3aacd94611d6fd5e583a9",
                 "shasum": ""
             },
             "require": {
@@ -119,50 +120,342 @@
                 "graph",
                 "neo4j"
             ],
-            "time": "2013-03-07 01:50:01"
+            "time": "2013-10-03 23:27:23"
         },
         {
-            "name": "facebook/php-sdk",
-            "version": "v3.2.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/facebook/facebook-php-sdk.git",
-                "reference": "v3.2.2"
-            },
+            "name": "pear-pear.php.net/Archive_Tar",
+            "version": "1.3.11",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/facebook/facebook-php-sdk/zipball/v3.2.2",
-                "reference": "v3.2.2",
-                "shasum": ""
+                "type": "file",
+                "url": "http://pear.php.net/get/Archive_Tar-1.3.11.tgz",
+                "reference": null,
+                "shasum": null
             },
             "require": {
-                "ext-curl": "*",
-                "ext-json": "*",
-                "php": ">=5.2.0"
+                "php": ">=4.3.0.0"
             },
-            "type": "library",
+            "replace": {
+                "pear-pear/archive_tar": "== 1.3.11.0"
+            },
+            "type": "pear-library",
             "autoload": {
                 "classmap": [
-                    "src"
+                    ""
                 ]
             },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Apache2"
+            "include-path": [
+                "/"
             ],
-            "authors": [
-                {
-                    "name": "Facebook",
-                    "homepage": "https://github.com/facebook/facebook-php-sdk/contributors"
-                }
+            "description": "This class provides handling of tar files in PHP.\nIt supports creating, listing, extracting and adding to tar files.\nGzip support is available if PHP has the zlib extension built-in or\nloaded. Bz2 compression is also supported with the bz2 extension loaded."
+        },
+        {
+            "name": "pear-pear.php.net/Console_Getopt",
+            "version": "1.3.1",
+            "dist": {
+                "type": "file",
+                "url": "http://pear.php.net/get/Console_Getopt-1.3.1.tgz",
+                "reference": null,
+                "shasum": null
+            },
+            "require": {
+                "php": ">=4.3.0.0"
+            },
+            "replace": {
+                "pear-pear/console_getopt": "== 1.3.1.0"
+            },
+            "type": "pear-library",
+            "autoload": {
+                "classmap": [
+                    ""
+                ]
+            },
+            "include-path": [
+                "/"
             ],
-            "description": "Facebook PHP SDK",
-            "homepage": "https://github.com/facebook/facebook-php-sdk",
-            "keywords": [
-                "facebook",
-                "sdk"
+            "description": "This is a PHP implementation of &quot;getopt&quot; supporting both\nshort and long options."
+        },
+        {
+            "name": "pear-pear.php.net/HTTP_Request",
+            "version": "1.4.4",
+            "dist": {
+                "type": "file",
+                "url": "http://pear.php.net/get/HTTP_Request-1.4.4.tgz",
+                "reference": null,
+                "shasum": null
+            },
+            "require": {
+                "pear-pear.php.net/net_socket": ">=1.0.7.0",
+                "pear-pear.php.net/net_url": ">=1.0.12.0",
+                "php": ">=4.2.0.0"
+            },
+            "replace": {
+                "pear-pear/http_request": "== 1.4.4.0"
+            },
+            "type": "pear-library",
+            "autoload": {
+                "classmap": [
+                    ""
+                ]
+            },
+            "include-path": [
+                "/"
             ],
-            "time": "2013-01-15 21:37:15"
+            "description": "Supports GET/POST/HEAD/TRACE/PUT/DELETE, Basic authentication, Proxy,\nProxy Authentication, SSL, file uploads etc."
+        },
+        {
+            "name": "pear-pear.php.net/Net_Socket",
+            "version": "1.0.14",
+            "dist": {
+                "type": "file",
+                "url": "http://pear.php.net/get/Net_Socket-1.0.14.tgz",
+                "reference": null,
+                "shasum": null
+            },
+            "require": {
+                "php": ">=4.3.0.0"
+            },
+            "replace": {
+                "pear-pear/net_socket": "== 1.0.14.0"
+            },
+            "type": "pear-library",
+            "autoload": {
+                "classmap": [
+                    ""
+                ]
+            },
+            "include-path": [
+                "/"
+            ],
+            "description": "Net_Socket is a class interface to TCP sockets.  It provides blocking\n  and non-blocking operation, with different reading and writing modes\n  (byte-wise, block-wise, line-wise and special formats like network\n  byte-order ip addresses)."
+        },
+        {
+            "name": "pear-pear.php.net/Net_URL",
+            "version": "1.0.15",
+            "dist": {
+                "type": "file",
+                "url": "http://pear.php.net/get/Net_URL-1.0.15.tgz",
+                "reference": null,
+                "shasum": null
+            },
+            "require": {
+                "php": ">=4.0.0.0"
+            },
+            "replace": {
+                "pear-pear/net_url": "== 1.0.15.0"
+            },
+            "type": "pear-library",
+            "autoload": {
+                "classmap": [
+                    ""
+                ]
+            },
+            "include-path": [
+                "/"
+            ],
+            "description": "Provides easy parsing of URLs and their constituent parts."
+        },
+        {
+            "name": "pear-pear.php.net/PEAR",
+            "version": "1.9.4",
+            "dist": {
+                "type": "file",
+                "url": "http://pear.php.net/get/PEAR-1.9.4.tgz",
+                "reference": null,
+                "shasum": null
+            },
+            "require": {
+                "ext-pcre": "*",
+                "ext-xml": "*",
+                "pear-pear.php.net/archive_tar": ">=1.3.7.0",
+                "pear-pear.php.net/console_getopt": ">=1.2.0.0",
+                "pear-pear.php.net/structures_graph": ">=1.0.2.0",
+                "pear-pear.php.net/xml_util": ">=1.2.0.0",
+                "php": ">=4.4.0.0,!=5.0.0.0,!=5.1.0.0,!=5.1.1.0,!=5.1.2.0,!=5.1.3.0,!=5.1.4.0,!=5.1.5.0"
+            },
+            "conflict": {
+                "pear-pear.php.net/pear_frontend_gtk": "<0.4.0.0",
+                "pear-pear.php.net/pear_frontend_web": "<=0.4.0.0"
+            },
+            "replace": {
+                "pear-pear/pear": "== 1.9.4.0"
+            },
+            "type": "pear-library",
+            "autoload": {
+                "classmap": [
+                    ""
+                ]
+            },
+            "include-path": [
+                "/"
+            ],
+            "description": "The PEAR package contains:\n * the PEAR installer, for creating, distributing\n   and installing packages\n * the PEAR_Exception PHP5 error handling mechanism\n * the PEAR_ErrorStack advanced error handling mechanism\n * the PEAR_Error error handling mechanism\n * the OS_Guess class for retrieving info about the OS\n   where PHP is running on\n * the System class for quick handling of common operations\n   with files and directories\n * the PEAR base class\n  Features in a nutshell:\n  * full support for channels\n  * pre-download dependency validation\n  * new package.xml 2.0 format allows tremendous flexibility while maintaining BC\n  * support for optional dependency groups and limited support for sub-packaging\n  * robust dependency support\n  * full dependency validation on uninstall\n  * remote install for hosts with only ftp access - no more problems with\n    restricted host installation\n  * full support for mirroring\n  * support for bundling several packages into a single tarball\n  * support for static dependencies on a url-based package\n  * support for custom file roles and installation tasks"
+        },
+        {
+            "name": "pear-pear.php.net/Services_OpenSearch",
+            "version": "0.2.0",
+            "dist": {
+                "type": "file",
+                "url": "http://pear.php.net/get/Services_OpenSearch-0.2.0.tgz",
+                "reference": null,
+                "shasum": null
+            },
+            "require": {
+                "pear-pear.php.net/http_request": "*",
+                "pear-pear.php.net/pear": "*",
+                "pear-pear.php.net/xml_rss": "*",
+                "pear-pear.php.net/xml_serializer": "*",
+                "php": ">=5.0.0.0"
+            },
+            "replace": {
+                "pear-pear/services_opensearch": "== 0.2.0.0"
+            },
+            "type": "pear-library",
+            "autoload": {
+                "classmap": [
+                    ""
+                ]
+            },
+            "include-path": [
+                "/"
+            ],
+            "description": "Provides access to A9 OpenSearch compatible search engines"
+        },
+        {
+            "name": "pear-pear.php.net/Structures_Graph",
+            "version": "1.0.4",
+            "dist": {
+                "type": "file",
+                "url": "http://pear.php.net/get/Structures_Graph-1.0.4.tgz",
+                "reference": null,
+                "shasum": null
+            },
+            "require": {
+                "php": ">=4.2.0.0"
+            },
+            "replace": {
+                "pear-pear/structures_graph": "== 1.0.4.0"
+            },
+            "type": "pear-library",
+            "autoload": {
+                "classmap": [
+                    ""
+                ]
+            },
+            "include-path": [
+                "/"
+            ],
+            "description": "Structures_Graph is a package for creating and manipulating graph datastructures. It allows building of directed\nand undirected graphs, with data and metadata stored in nodes. The library provides functions for graph traversing\nas well as for characteristic extraction from the graph topology."
+        },
+        {
+            "name": "pear-pear.php.net/XML_Parser",
+            "version": "1.3.4",
+            "dist": {
+                "type": "file",
+                "url": "http://pear.php.net/get/XML_Parser-1.3.4.tgz",
+                "reference": null,
+                "shasum": null
+            },
+            "require": {
+                "pear-pear.php.net/pear": "*",
+                "php": ">=4.2.0.0"
+            },
+            "replace": {
+                "pear-pear/xml_parser": "== 1.3.4.0"
+            },
+            "type": "pear-library",
+            "autoload": {
+                "classmap": [
+                    ""
+                ]
+            },
+            "include-path": [
+                "/"
+            ],
+            "description": "This is an XML parser based on PHPs built-in xml extension.\nIt supports two basic modes of operation: &amp;quot;func&amp;quot; and &amp;quot;event&amp;quot;.  In &amp;quot;func&amp;quot; mode, it will look for a function named after each element (xmltag_ELEMENT for start tags and xmltag_ELEMENT_ for end tags), and in &amp;quot;event&amp;quot; mode it uses a set of generic callbacks.\n\nSince version 1.2.0 there's a new XML_Parser_Simple class that makes parsing of most XML documents easier, by automatically providing a stack for the elements.\nFurthermore its now possible to split the parser from the handler object, so you do not have to extend XML_Parser anymore in order to parse a document with it."
+        },
+        {
+            "name": "pear-pear.php.net/XML_RSS",
+            "version": "1.0.2",
+            "dist": {
+                "type": "file",
+                "url": "http://pear.php.net/get/XML_RSS-1.0.2.tgz",
+                "reference": null,
+                "shasum": null
+            },
+            "require": {
+                "pear-pear.php.net/xml_parser": ">1.0.1.0",
+                "php": ">=4.4.0.0"
+            },
+            "replace": {
+                "pear-pear/xml_rss": "== 1.0.2.0"
+            },
+            "type": "pear-library",
+            "autoload": {
+                "classmap": [
+                    ""
+                ]
+            },
+            "include-path": [
+                "/"
+            ],
+            "description": "Parser for Resource Description Framework (RDF)\n  Site Summary (RSS) documents."
+        },
+        {
+            "name": "pear-pear.php.net/XML_Serializer",
+            "version": "0.20.2",
+            "dist": {
+                "type": "file",
+                "url": "http://pear.php.net/get/XML_Serializer-0.20.2.tgz",
+                "reference": null,
+                "shasum": null
+            },
+            "require": {
+                "ext-xml": "*",
+                "pear-pear.php.net/pear": "*",
+                "pear-pear.php.net/xml_parser": ">=1.2.6.0",
+                "pear-pear.php.net/xml_util": ">=1.1.1.0",
+                "php": ">=4.2.0.0"
+            },
+            "replace": {
+                "pear-pear/xml_serializer": "== 0.20.2.0"
+            },
+            "type": "pear-library",
+            "autoload": {
+                "classmap": [
+                    ""
+                ]
+            },
+            "include-path": [
+                "/"
+            ],
+            "description": "XML_Serializer serializes complex data structures like arrays or object as XML documents.\nThis class helps you generating any XML document you require without the need for DOM.\nFurthermore this package can be used as a replacement to serialize() and unserialize() as it comes with a matching XML_Unserializer that is able to create PHP data structures (like arrays and objects) from XML documents, if type hints are available.\nIf you use the XML_Unserializer on standard XML files, it will try to guess how it has to be unserialized. In most cases it does exactly what you expect it to do.\nTry reading a RSS file with XML_Unserializer and you have the whole RSS file in a structured array or even a collection of objects, similar to XML_RSS.\n\nSince version 0.8.0 the package is able to treat XML documents similar to the simplexml extension of PHP 5."
+        },
+        {
+            "name": "pear-pear.php.net/XML_Util",
+            "version": "1.2.1",
+            "dist": {
+                "type": "file",
+                "url": "http://pear.php.net/get/XML_Util-1.2.1.tgz",
+                "reference": null,
+                "shasum": null
+            },
+            "require": {
+                "ext-pcre": "*",
+                "php": ">=4.3.0.0"
+            },
+            "replace": {
+                "pear-pear/xml_util": "== 1.2.1.0"
+            },
+            "type": "pear-library",
+            "autoload": {
+                "classmap": [
+                    ""
+                ]
+            },
+            "include-path": [
+                "/"
+            ],
+            "description": "Selection of methods that are often needed when working with XML documents.  Functionality includes creating of attribute lists from arrays, creation of tags, validation of XML names and more."
         },
         {
             "name": "silverstripe/cms",
@@ -170,12 +463,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silverstripe/silverstripe-cms.git",
-                "reference": "f937b95eaf2b74ee75b46ad56a44e9126a927690"
+                "reference": "648c2072e8e966aebe4e2e18c53f9b82a3bdea5e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silverstripe/silverstripe-cms/zipball/f937b95eaf2b74ee75b46ad56a44e9126a927690",
-                "reference": "f937b95eaf2b74ee75b46ad56a44e9126a927690",
+                "url": "https://api.github.com/repos/silverstripe/silverstripe-cms/zipball/648c2072e8e966aebe4e2e18c53f9b82a3bdea5e",
+                "reference": "648c2072e8e966aebe4e2e18c53f9b82a3bdea5e",
                 "shasum": ""
             },
             "require": {
@@ -209,7 +502,7 @@
                 "cms",
                 "silverstripe"
             ],
-            "time": "2013-07-18 19:49:04"
+            "time": "2013-10-04 10:38:27"
         },
         {
             "name": "silverstripe/framework",
@@ -217,12 +510,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silverstripe/silverstripe-framework.git",
-                "reference": "58a2eb01555a778d1c8453697d91ce353b0e605b"
+                "reference": "902c8db8593475b37bdb408c1424dd5a3fea8d74"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silverstripe/silverstripe-framework/zipball/58a2eb01555a778d1c8453697d91ce353b0e605b",
-                "reference": "58a2eb01555a778d1c8453697d91ce353b0e605b",
+                "url": "https://api.github.com/repos/silverstripe/silverstripe-framework/zipball/902c8db8593475b37bdb408c1424dd5a3fea8d74",
+                "reference": "902c8db8593475b37bdb408c1424dd5a3fea8d74",
                 "shasum": ""
             },
             "require": {
@@ -255,7 +548,437 @@
                 "framework",
                 "silverstripe"
             ],
-            "time": "2013-07-19 06:14:53"
+            "time": "2013-10-04 09:21:04"
+        },
+        {
+            "name": "silverstripe/multivaluefield",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nyeholt/silverstripe-multivaluefield.git",
+                "reference": "f3accee1b7040954b170aeb704de27cd062033c9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nyeholt/silverstripe-multivaluefield/zipball/f3accee1b7040954b170aeb704de27cd062033c9",
+                "reference": "f3accee1b7040954b170aeb704de27cd062033c9",
+                "shasum": ""
+            },
+            "require": {
+                "silverstripe/framework": ">=3.0.0"
+            },
+            "type": "silverstripe-module",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Marcus Nyeholt",
+                    "email": "marcus@silverstripe.com.au"
+                }
+            ],
+            "description": "A DB field + form fields for storing multiple values in a single property (serialized).",
+            "keywords": [
+                "dbfield",
+                "formfield",
+                "silverstripe"
+            ],
+            "support": {
+                "source": "https://github.com/nyeholt/silverstripe-multivaluefield/tree/master",
+                "issues": "https://github.com/nyeholt/silverstripe-multivaluefield/issues"
+            },
+            "time": "2013-09-23 01:35:52"
+        },
+        {
+            "name": "silverstripe/queuedjobs",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nyeholt/silverstripe-queuedjobs.git",
+                "reference": "37c4c12277dc133d6ec4f9c3005386b7d6ba8f35"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nyeholt/silverstripe-queuedjobs/zipball/37c4c12277dc133d6ec4f9c3005386b7d6ba8f35",
+                "reference": "37c4c12277dc133d6ec4f9c3005386b7d6ba8f35",
+                "shasum": ""
+            },
+            "require": {
+                "silverstripe/cms": "3.1.x-dev",
+                "silverstripe/framework": "3.1.x-dev",
+                "silverstripe/multivaluefield": "dev-master"
+            },
+            "type": "silverstripe-module",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Marcus Nyeholt",
+                    "email": "marcus@silverstirpe.com.au"
+                }
+            ],
+            "description": "A framework for defining and running background jobs in a queued manner",
+            "keywords": [
+                "jobs",
+                "silverstripe"
+            ],
+            "time": "2013-09-16 07:38:58"
+        },
+        {
+            "name": "zendframework/zend-escaper",
+            "version": "2.2.4",
+            "target-dir": "Zend/Escaper",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zendframework/Component_ZendEscaper.git",
+                "reference": "5db67b32359d86326077209f1fefbbf1183911e8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zendframework/Component_ZendEscaper/zipball/5db67b32359d86326077209f1fefbbf1183911e8",
+                "reference": "5db67b32359d86326077209f1fefbbf1183911e8",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2-dev",
+                    "dev-develop": "2.3-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Zend\\Escaper\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "keywords": [
+                "escaper",
+                "zf2"
+            ],
+            "time": "2013-05-01 21:53:03"
+        },
+        {
+            "name": "zendframework/zend-http",
+            "version": "2.2.4",
+            "target-dir": "Zend/Http",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zendframework/Component_ZendHttp.git",
+                "reference": "23c58ffd0929dc328c62f1fe12e7a343638c70c8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zendframework/Component_ZendHttp/zipball/23c58ffd0929dc328c62f1fe12e7a343638c70c8",
+                "reference": "23c58ffd0929dc328c62f1fe12e7a343638c70c8",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3",
+                "zendframework/zend-loader": "self.version",
+                "zendframework/zend-stdlib": "self.version",
+                "zendframework/zend-uri": "self.version",
+                "zendframework/zend-validator": "self.version"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2-dev",
+                    "dev-develop": "2.3-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Zend\\Http\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "provides an easy interface for performing Hyper-Text Transfer Protocol (HTTP) requests",
+            "keywords": [
+                "http",
+                "zf2"
+            ],
+            "time": "2013-08-21 17:08:02"
+        },
+        {
+            "name": "zendframework/zend-loader",
+            "version": "2.2.4",
+            "target-dir": "Zend/Loader",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zendframework/Component_ZendLoader.git",
+                "reference": "11a952589d37879d92fee78e70eed731c1073ed3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zendframework/Component_ZendLoader/zipball/11a952589d37879d92fee78e70eed731c1073ed3",
+                "reference": "11a952589d37879d92fee78e70eed731c1073ed3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "suggest": {
+                "zendframework/zend-stdlib": "Zend\\Stdlib component"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2-dev",
+                    "dev-develop": "2.3-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Zend\\Loader\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "keywords": [
+                "loader",
+                "zf2"
+            ],
+            "time": "2013-08-21 17:07:14"
+        },
+        {
+            "name": "zendframework/zend-stdlib",
+            "version": "2.2.4",
+            "target-dir": "Zend/Stdlib",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zendframework/Component_ZendStdlib.git",
+                "reference": "7c87ce4e840957596bf3401fa4ae4fb0355682e2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zendframework/Component_ZendStdlib/zipball/7c87ce4e840957596bf3401fa4ae4fb0355682e2",
+                "reference": "7c87ce4e840957596bf3401fa4ae4fb0355682e2",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "suggest": {
+                "zendframework/zend-eventmanager": "To support aggregate hydrator usage",
+                "zendframework/zend-servicemanager": "To support hydrator plugin manager usage"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2-dev",
+                    "dev-develop": "2.3-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Zend\\Stdlib\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "keywords": [
+                "stdlib",
+                "zf2"
+            ],
+            "time": "2013-08-21 17:08:07"
+        },
+        {
+            "name": "zendframework/zend-uri",
+            "version": "2.2.4",
+            "target-dir": "Zend/Uri",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zendframework/Component_ZendUri.git",
+                "reference": "e2a4b038a0939d46e53bfa40cfc9f1791533ae84"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zendframework/Component_ZendUri/zipball/e2a4b038a0939d46e53bfa40cfc9f1791533ae84",
+                "reference": "e2a4b038a0939d46e53bfa40cfc9f1791533ae84",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3",
+                "zendframework/zend-escaper": "self.version",
+                "zendframework/zend-validator": "self.version"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2-dev",
+                    "dev-develop": "2.3-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Zend\\Uri\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "a component that aids in manipulating and validating » Uniform Resource Identifiers (URIs)",
+            "keywords": [
+                "uri",
+                "zf2"
+            ],
+            "time": "2013-06-12 19:46:02"
+        },
+        {
+            "name": "zendframework/zend-validator",
+            "version": "2.2.4",
+            "target-dir": "Zend/Validator",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zendframework/Component_ZendValidator.git",
+                "reference": "3aa2c87ee3d36763b30087b1188f42a6c95f414f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zendframework/Component_ZendValidator/zipball/3aa2c87ee3d36763b30087b1188f42a6c95f414f",
+                "reference": "3aa2c87ee3d36763b30087b1188f42a6c95f414f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3",
+                "zendframework/zend-stdlib": "self.version"
+            },
+            "require-dev": {
+                "zendframework/zend-filter": "self.version",
+                "zendframework/zend-i18n": "self.version",
+                "zendframework/zend-math": "self.version",
+                "zendframework/zend-servicemanager": "self.version"
+            },
+            "suggest": {
+                "zendframework/zend-db": "Zend\\Db component",
+                "zendframework/zend-filter": "Zend\\Filter component, required by the Digits validator",
+                "zendframework/zend-i18n": "Zend\\I18n component to allow translation of validation error messages as well as to use the various Date validators",
+                "zendframework/zend-math": "Zend\\Math component",
+                "zendframework/zend-resources": "Translations of validator messages",
+                "zendframework/zend-servicemanager": "Zend\\ServiceManager component to allow using the ValidatorPluginManager and validator chains"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2-dev",
+                    "dev-develop": "2.3-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Zend\\Validator\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "provides a set of commonly needed validators",
+            "keywords": [
+                "validator",
+                "zf2"
+            ],
+            "time": "2013-08-21 17:07:51"
+        },
+        {
+            "name": "zendframework/zend-version",
+            "version": "2.2.4",
+            "target-dir": "Zend/Version",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zendframework/Component_ZendVersion.git",
+                "reference": "64d7fccda29c8435d989b05c10e7e6dad914fcff"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zendframework/Component_ZendVersion/zipball/64d7fccda29c8435d989b05c10e7e6dad914fcff",
+                "reference": "64d7fccda29c8435d989b05c10e7e6dad914fcff",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2-dev",
+                    "dev-develop": "2.3-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Zend\\Version\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "keywords": [
+                "version",
+                "zf2"
+            ],
+            "time": "2013-08-26 15:24:04"
+        },
+        {
+            "name": "zendframework/zendservice-flickr",
+            "version": "2.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zendframework/ZendService_Flickr.git",
+                "reference": "deb21a240466ad86ab594a6ff2689c334b02298a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zendframework/ZendService_Flickr/zipball/deb21a240466ad86ab594a6ff2689c334b02298a",
+                "reference": "deb21a240466ad86ab594a6ff2689c334b02298a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3",
+                "zendframework/zend-http": ">=2.0.0",
+                "zendframework/zend-uri": ">=2.0.0",
+                "zendframework/zend-version": ">=2.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "ZendService": "library/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "OOP wrapper for the Flickr web service",
+            "homepage": "http://packages.zendframework.com/",
+            "keywords": [
+                "flickr",
+                "zf2"
+            ],
+            "time": "2012-09-24 15:18:11"
         }
     ],
     "packages-dev": [
@@ -268,7 +991,9 @@
     "stability-flags": {
         "silverstripe/cms": 20,
         "silverstripe/framework": 20,
-        "everyman/neo4jphp": 20
+        "everyman/neo4jphp": 20,
+        "silverstripe/multivaluefield": 20,
+        "silverstripe/queuedjobs": 20
     },
     "platform": {
         "php": ">=5.3.2"

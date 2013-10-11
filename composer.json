@@ -2,11 +2,25 @@
 	"name": "drzax/apdl",
 	"description": "APDL Collection Challenge",
 	"version": "1.0",
+	"repositories": [
+		{
+			"type": "vcs",
+			"url": "https://github.com/nyeholt/silverstripe-multivaluefield.git"
+		},
+		{
+			"type": "pear",
+            "url": "http://pear.php.net"
+		}
+	],
 	"require": {
 		"php": ">=5.3.2",
-		"silverstripe/cms": "3.1.x-dev",
-		"silverstripe/framework": "3.1.x-dev",
-		"facebook/php-sdk": "v3.2.2",
-		"everyman/neo4jphp": "dev-master"
+		"silverstripe/cms": "~3.1.0",
+		"silverstripe/framework": "~3.1.0",
+		"everyman/neo4jphp": "dev-master",
+		"silverstripe/multivaluefield": "dev-master",
+		"silverstripe/queuedjobs": "dev-master",
+		"pear-pear/Services_OpenSearch": "*",
+		"zendframework/zendservice-flickr": "~2.0.0",
+		"lrc/silverstripe-link-field": "dev-master"
 	}
 }

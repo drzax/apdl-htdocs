@@ -1,4 +1,8 @@
 vendor
 cms
 framework
+queuedjobs
+multivaluefield
 _ss_environment.php
+.sass-cache
+node_modules
