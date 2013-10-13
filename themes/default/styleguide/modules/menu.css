@@ -1,0 +1,26 @@
+/**
+# This styles the site's main sidebar.
+
+```
+<div id="sidebar">
+	<header>
+		<h1>Kindred</h1>
+		<h2>Explore the APDL</h2>
+	</header>
+	<nav>
+		<a href=""></a>
+	</nav>
+	<footer>
+		<% if CurrentFacebookMember %>
+			<p>Hi $CurrentFacebookMember.FirstName</p>
+			<% include ConnectLogout %>
+		<% else %>
+			<% include ConnectLogin %>
+		<% end_if %>
+	</footer>
+</div>
+```
+*/
+#sidebar {
+  color: #f8f8f8;
+  background: #131313; }

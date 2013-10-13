@@ -1,0 +1,18 @@
+/*
+	Document   : style.scss
+	Created on : Jul 25, 2013, 3:53:34 PM
+	Author     : Simon Elvery
+	Description:
+	The main CSS style sheet.
+*/
+
+// Settings and mixins
+@import 'compass';
+@import 'mixins';
+
+@import 'lib/normalize.css';
+@import 'typography'; 
+@import 'layout';
+
+// Modules
+@import 'modules/sidebar';
