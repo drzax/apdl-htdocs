@@ -1,0 +1,6 @@
+---
+Name: api
+---
+Director:
+  rules:
+    'api/$Action': API
