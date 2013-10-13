@@ -30,8 +30,13 @@ if (Director::isDev()) {
 Email::setAdminEmail('simon@elvery.net');
 
 // Warnings and errors to log file we can access easily.
-SS_Log::add_writer(new SS_LogFileWriter(dirname(__FILE__) . '/../../logs/errors-' . date('Ymd')), SS_Log::NOTICE, '<=');
+SS_Log::add_writer(new SS_LogFileWriter(dirname(__FILE__) . '/logs/errors-' . date('Ymd')), SS_Log::NOTICE, '<=');
+$updateWriter = new SS_LogFileWriter(dirname(__FILE__) . '/logs/updates-' . date('Ymd'));
+$updateWriter->setFormatter(new UpdateLogFileFormatter());
+UpdateLog::add_writer($updateWriter, UpdateLog::NOTICE, '<=');
+	
 
 // Configure the CMS editor
 HtmlEditorConfig::get('cms')->insertButtonsBefore('bullist','sup','sub');
 DateField::set_default_config('showcalendar', true);
+
