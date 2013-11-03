@@ -4,10 +4,6 @@
 	"version": "1.0",
 	"repositories": [
 		{
-			"type": "vcs",
-			"url": "https://github.com/nyeholt/silverstripe-multivaluefield.git"
-		},
-		{
 			"type": "pear",
             "url": "http://pear.php.net"
 		}
@@ -20,7 +16,6 @@
 		"silverstripe/multivaluefield": "dev-master",
 		"silverstripe/queuedjobs": "dev-master",
 		"pear-pear/Services_OpenSearch": "*",
-		"zendframework/zendservice-flickr": "~2.0.0",
-		"lrc/silverstripe-link-field": "dev-master"
+		"zendframework/zendservice-flickr": "~2.0.0"
 	}
 }
