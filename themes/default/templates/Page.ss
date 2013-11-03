@@ -15,33 +15,38 @@
 	<link rel="shortcut icon" href="$ThemeDir/images/favicon.ico">
 	<link href='http://fonts.googleapis.com/css?family=Playfair+Display:400,700,900,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" href="$ThemeDir/css/style.css">
+	<script data-main="$ThemeDir/javascript/main.js" src="$ThemeDir/javascript/require.js"></script>
 </head>
 <body class="$ClassName<% if Menu(2) %><% else %> no-sidebar<% end_if %>">
 	<div id="container">
-		<div id="sidebar">
-			<header>
-				<h1>Kindred</h1>
-			</header>
-			<nav>
-				<a href=""></a>
-			</nav>
-			<footer>
-				<% include LogInOut %>
-			</footer>
-		</div>
-		<div id="content-scroller">
-			<div id="content-wrapper">
-				<section id="profile" class="content-pane">
-					$Layout
-				</section>
-				<section id="timeline" class="content-pane">
-					
-				</section>
-				<section id="network" class="content-pane">
-					
-				</section>
+		<nav id="off-screen-nav">
+			
+		</nav>
+
+		<div id="pusher">
+			<div id="content">
+				<div id="content-inner">
+					<h1 class="site-title"><span>Kindred</span></h1>
+
+					<div class="introduction">Intro</div>
+
+					<h2>Search</h2>
+
+					<input>
+
+					<h2>Explore</h2>
+
+					<a href="cat/build"><img src="$ThemeDir/images/icon-build.svg"></a>
+					<a href="cat/dress"><img src="$ThemeDir/images/icon-dress.svg"></a>
+					<a href="cat/look"><img src="$ThemeDir/images/icon-look.svg"></a>
+					<a href="cat/smile"><img src="$ThemeDir/images/icon-smile.svg"></a>
+					<a href="cat/think"><img src="$ThemeDir/images/icon-think.svg"></a>
+
+					<a href="#" id="nav-trigger"><span>Menu</span></a>
+				</div>
 			</div>
 		</div>
+
 	</div>
 </body>
 </html>

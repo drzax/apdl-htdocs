@@ -1,0 +1,1 @@
+(function(){require(["jquery"],function(n){var e,r;r=n("#nav-trigger"),e=n("body"),$pusher=n("#pusher"),r.on("click",function(){return e.addClass("nav-open"),$pusher.one("click",function(){return e.removeClass("nav-open"),!1}),!1})})})();

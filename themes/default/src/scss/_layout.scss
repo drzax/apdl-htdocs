@@ -8,64 +8,132 @@
 
 // Layout settings
 $sidebar-width: 200px;
+$body-background: #444;
+
+*, 
+*:before, 
+*:after {
+	@include box-sizing(border-box); 
+}
 
 body {
-	overflow-y: hidden;
-	overflow-x: hidden;
+	background: $body-background;
 }
 
-#sidebar {
-    position: fixed;
-    z-index: 100;
-    width: $sidebar-width;
-    left: 0px;
-    top: 0px;
-    height: 100%;
-	
-	header, footer {
-		width: 100%;
-		height: 200px;
-		position: absolute;
-	}
-	
-	header {
-		top: 0;
-	}
-	
-	nav {
-		position: absolute;
-		bottom: 200px;
-		top: 200px;
-	}
-	
-	footer {
-		bottom: 0;
-	}
+html,
+body,
+#container,
+#pusher,
+#content {
+	height: 100%;
+	margin: 0;
 }
 
-#content-scroller{
-    position: absolute;
-    left: $sidebar-width;
-    right: 0px;
+#content {
+	overflow-y: scroll;
+	background: #f3efe0;
+}
+
+#content,
+#content-inner {
+	position: relative;
+	text-align: center;
+}
+
+#container {
+	position: relative;
+	overflow: hidden;
+}
+
+#pusher {
+	position: relative;
+	left: 0;
+	z-index: 99;
+	height: 100%;
+	-webkit-transition: -webkit-transform 0.5s;
+	transition: transform 0.5s;
+}
+
+#pusher::after {
+	position: absolute;
 	top: 0;
-    overflow: hidden;
-    height: 100%;
+	right: 0;
+	width: 0;
+	height: 0;
+	background: rgba(0,0,0,0.2);
+	content: '';
+	opacity: 0;
+	-webkit-transition: opacity 0.5s, width 0.1s 0.5s, height 0.1s 0.5s;
+	transition: opacity 0.5s, width 0.1s 0.5s, height 0.1s 0.5s;
 }
 
-#content-wrapper {
-    width: 7950px;
-    position: absolute;
-    height: 100%;
-    overflow: hidden;
+.nav-open #pusher::after {
+	width: 100%;
+	height: 100%;
+	opacity: 1;
+	-webkit-transition: opacity 0.5s;
+	transition: opacity 0.5s;
 }
 
-.content-pane {
-    width: 500px;
-    overflow-y: auto;
-    height: 100%;
-    float: left;
-    border-right: 1px dashed rgba(126, 126, 126, 0.2);
-    border-left: 1px dashed rgba(255, 255, 255, 0.5);
-    background: transparent;
-    transition: background 0.3s linear;
+#off-screen-nav {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 100;
+	width: 300px;
+	height: 100%;
+	background: #48a770;
+	-webkit-transition: all 0.5s;
+	transition: all 0.5s;
+}
+
+#off-screen-nav::after {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0,0,0,0.2);
+	content: '';
+	opacity: 1;
+	-webkit-transition: opacity 0.5s;
+	transition: opacity 0.5s;
+}
+
+.nav-open #off-screen-nav::after {
+	width: 0;
+	height: 0;
+	opacity: 0;
+	-webkit-transition: opacity 0.5s, width 0.1s 0.5s, height 0.1s 0.5s;
+	transition: opacity 0.5s, width 0.1s 0.5s, height 0.1s 0.5s;
+}
+
+.nav-open #pusher {
+	-webkit-transform: translate3d(300px, 0, 0);
+	transform: translate3d(300px, 0, 0);
+}
+
+#off-screen-nav {
+	z-index: 1;
+	-webkit-transform: translate3d(50%, 0, 0);
+	transform: translate3d(50%, 0, 0);
+}
+
+.nav-open #off-screen-nav {
+	visibility: visible;
+	-webkit-transition: -webkit-transform 0.5s;
+	transition: transform 0.5s;
+	-webkit-transform: translate3d(0, 0, 0);
+	transform: translate3d(0, 0, 0);
+}
+
+
+#nav-trigger {
+    position: fixed;
+    top: 15px;
+    left: 20px;
+    display: block;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
 }
