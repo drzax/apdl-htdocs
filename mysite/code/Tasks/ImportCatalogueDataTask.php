@@ -17,10 +17,44 @@ class ImportCatalogueDataTask extends BuildTask {
 	}
 
 	public function run($request) {
+		$this->tagData();
+		$this->barcodeData();
+	}
+
+	private function barcodeData() {
+		$items = array();
+
+		$csv = new CSVParser(dirname(__FILE__) . "/../../../assets/data-barcodes.csv");
+		foreach ($csv as $row) {
+
+			if (!array_key_exists($row['BIB_ID'], $items)) {
+				// Create the catalogue item object
+				$item = CatalogueItem::get()->filter('BIB', $row['BIB_ID'])->first();
+
+				// Item should all be created by the tagData function, only populate common fields if it wasn't
+				if (is_null($item)) {
+					$item = CatalogueItem::create();
+					$item->BIB = $row['BIB_ID'];
+					$item->Title = $this->sanitiseTitle($row['TITLE']);
+					$item->ISBN = $this->sanitiseISBN($row['TAG020']);
+					$item->Author = $this->sanitiseAuthor($row['AUTHOR']);
+				}
+
+				// Add barcode
+				$item->Barcode = $this->sanitiseBarcode($row['ITEM_BARCODE']);
+				
+				$item->write();
+
+				$items[$row['BIB_ID']] = $item;
+			}
+		}
+	}
+
+	private function tagData() {
 
 		$items = array();
 
-		$csv = new CSVParser(dirname(__FILE__) . "/../../../assets/data.csv");
+		$csv = new CSVParser(dirname(__FILE__) . "/../../../assets/data-tags.csv");
 		foreach ($csv as $row) {
 
 			//
@@ -33,21 +67,9 @@ class ImportCatalogueDataTask extends BuildTask {
 				}
 
 				$item->BIB = $row['BIB_ID'];
-
-				if (trim($row['TITLE'])) {
-					$item->setNodeProperty('title', trim($row['TITLE']));
-				}
-
-				if (trim($row['ISBN'])) {
-					// Clean the ISBN field
-					preg_match('/[^\s]+/', $row['ISBN'], $match);
-					$isbn = $match[0];
-					$item->setNodeProperty('isbn', $isbn);
-				}
-
-				if (trim($row['AUTHOR'])) {
-					$item->setNodeProperty('author', trim($row['AUTHOR']));
-				}
+				$item->Title = $this->sanitiseTitle($row['TITLE']);
+				$item->ISBN = $this->sanitiseISBN($row['ISBN']);
+				$item->Author = $this->sanitiseAuthor($row['AUTHOR']);
 
 				$item->write();
 
@@ -55,9 +77,32 @@ class ImportCatalogueDataTask extends BuildTask {
 
 			}
 
+			// Make tag relationship.
 			if (trim($row['TAGS'])) {
 				$items[$row['BIB_ID']]->setTag(trim($row['TAGS']));
 			}
 		}
+	}
+
+	// Remove dates from the author's name.
+	private function sanitiseAuthor($author) {
+		return preg_replace('/, [0-9 \.-]+/', '', $author);
+	}
+
+	// todo: Actually sanitise.
+	private function sanitiseBarcode($barcode) {
+		return $barcode;
+	}
+
+	private function sanitiseISBN($isbn) {
+		// Clean the ISBN field
+		preg_match('/[^\s]+/', trim($isbn), $match);
+		return (isset($match[0])) ? $match[0] : null;
+	}
+
+	// Remove author's name
+	private function sanitiseTitle($title) {
+		$slash = strrpos($title, '/');
+		return $slash ? trim(substr($title, 0, $slash)) : trim($title);
 	}
 }
