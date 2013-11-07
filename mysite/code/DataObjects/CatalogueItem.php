@@ -19,7 +19,11 @@ class CatalogueItem extends DataObject {
 	private static $db = array(
 		'BIB' => 'Int',
 		'NodeId' => 'Int',
-		'NextUpdate' => 'Int'
+		'NextUpdate' => 'Int',
+		'Title' => 'Varchar(300)',
+		'Author' => 'Varchar(300)',
+		'ISBN' => 'Varchar(30)',
+		'Barcode' => 'Varchar(40)'
 	);
 
 	private static $singlular_name = 'Catalogue Item';
@@ -73,6 +77,33 @@ class CatalogueItem extends DataObject {
 	 */
 	public function getTitle() {
 		return $this->getNode()->getProperty('title');
+	}
+
+	/**
+	 * Set the title. It goes to two places.
+	 * @param string $title The item title
+	 */
+	public function setTitle($title) {
+		$this->setField('Title', $title);
+		$this->setNodeProperty('title', $title);
+	}
+
+	/**
+	 * Set the author. It goes to two places.
+	 * @param string $author The item author
+	 */
+	public function setAuthor($author) {
+		$this->setField('Author', $author);
+		$this->setNodeProperty('author', $author);
+	}
+
+	/**
+	 * Set the ISBN. It goes to two places.
+	 * @param string $isbn The item ISBN
+	 */
+	public function setISBN($isbn) {
+		$this->setField('ISBN', $isbn);
+		$this->setNodeProperty('isbn', $isbn);
 	}
 
 	/**
