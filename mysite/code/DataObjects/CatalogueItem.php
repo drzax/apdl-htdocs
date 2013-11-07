@@ -6,12 +6,28 @@ use Everyman\Neo4j\Index\NodeIndex;
 use Everyman\Neo4j\Relationship;
 
 /**
- * A wrapper object for a node in the neo4j graph that represents a catalogue item.
+ * Provides a Silverstripe DataObject for catalogue items. This provides a link between
+ * the item in Silverstripe's MySQL database and the neo4j database which holds most of
+ * the data about items.
+ * 
  * Provides a number of functions specific to working with catalogue item nodes.
  */
-class CatalogueItem {
+class CatalogueItem extends DataObject {
 
 	private $node, $catalogueIndex;
+
+	private static $db = array(
+		'BIB' => 'Int',
+		'NodeId' => 'Int',
+		'NextUpdate' => 'Int'
+	);
+
+	private static $singlular_name = 'Catalogue Item';
+	private static $plural_name = 'Catalogue Items';
+	
+	private static $default_sort = 'BIB';
+	
+	private static $summary_fields = array('BIB','NodeId','Title','Author');	
 
 	private $indexedProperties = array(
 		'title',
@@ -22,47 +38,139 @@ class CatalogueItem {
 	);
 
 	/**
-	 * Instantiate the CatalogueItem objecct
-	 * @param Everyman\Neo4j\Node|int $node The node object or node ID.
+	 * Return a reference to the neo4j node object for direct usage.
 	 */
-	public function __construct($node) {
+	public function getNode() {
+
+		// If it's null, attempt to get it from Neo4j
+		if (is_null($this->node)) {
+			$this->node = Neo4jConnection::get()->getNode((int) $this->NodeId);
+		}
+
+		// If it's still null, create an empty node
+		if (is_null($this->node)) {
+			$this->node = Neo4jConnection::get()->makeNode();
+		}
+		return $this->node;
+	}
+
+	/**
+	 * Set the neo4j node object for this catalogue item.
+	 * 
+	 * @param Node|int $node A neo4j Node object or the node's ID.
+	 */
+	public function setNode($node) {
 		if ($node instanceof Node) {
 			$this->node = $node;
 		} else {
 			$this->node = Neo4jConnection::get()->getNode((int) $node);
-		}
+		}	
 	}
 
 	/**
-	 * Return a reference to the neo4j node object for direct usage.
+	 * Get the title property from neo4j
+	 * @return string The title
 	 */
-	public function getNode() {
-		return $node;
+	public function getTitle() {
+		return $this->getNode()->getProperty('title');
 	}
 
 	/**
-	 * Magic getter for properties on the node.
-	 * @param string $property The name of the property  to return.
+	 * Get the author property from neo4j
+	 * @return string The author
 	 */
-	public function __get($property) {
-		return $this->node->getProperty($property);
+	public function getAuthor() {
+		return $this->getNode()->getProperty('author');
 	}
 
 	/**
-	 * Magic setter for properties on the node.
+	 * Setter function for properties of this object which are stored in the neo4j
+	 * record. 
+	 *
+	 * Automatically adds properties to indexes.
+	 * 
 	 * @param string $name The name of the property to set.
 	 * @param mixed $value The value to set.
 	 */
-	public function __set($name, $value) {
+	public function setNodeProperty($name, $value) {
 
 		// Make sure the index is updated if it should be.
 		if (in_array($name, $this->indexedProperties)) {
 			$this->indexOn($name, $value);
 		}
 
-		return $this->node->setProperty($name, $value);
+		return $this->getNode()->setProperty($name, $value);
 	}
 
+	/**
+	 * Update the node from external data sources.
+	 * Each external data source is implemented as an extension on this class.
+	 */
+	public function updateCatalogueData() {
+
+		$this->extend('onUpdateCatalogueData');
+
+		// Save the update time on the node
+		$time = time();
+		$this->setNodeProperty('updated', $time);
+		$this->DataUpdated = $time;
+		$this->write();
+	}
+
+	/**
+	 * Save the underlying neo4j node back to the database on write.
+	 */	
+	public function onBeforeWrite() {
+		$node = $this->getNode()->save();
+		$this->NodeId = $node->getId();
+		parent::onBeforeWrite();
+	}
+
+	/**
+	 * Index this item's neo4j node in the catalogue index with the given key and value
+	 * @param  string $key The index key
+	 * @param  string $val The index value
+	 * @return NodeIndex
+	 */
+	private function indexOn($key, $val) {
+
+		// Make sure the index exists.
+		$catalogueIndex = Neo4jConnection::getIndex('catalogue');
+		$node = $this->getNode();
+
+		if (!$node->getId()) {
+			$node->save();
+		}
+		
+		return $catalogueIndex->add($node, $key, $val);
+
+	}
+
+	/**
+	 * Check if a relationship exists between two nodes on the neo4j database.
+	 *
+	 * @todo  This shouldn't be here
+	 * @param  Node $start The starting node
+	 * @param  string $type  The type of relationship to check for
+	 * @param  Node $end The ending node.
+	 * @return boolean True if the relationship exists.
+	 */
+	private function relationshipExists($start, $type, $end) {
+
+		$relationships = $start->getRelationships(array($type), Relationship::DirectionOut);
+		foreach ($relationships as $rel) {
+			if ($rel->getEndNode()->getId() === $end->getId()) return true;
+		}
+		return false;
+	}
+
+
+	/**
+	 * Get the WorldCat record for a book by ISBN.
+	 * @todo  This shouldn't be here.
+	 * @param  string $isbn The ISBN for a book to retrieve details for.
+	 * @return stdClass The WorldCat record.
+	 */
 	public function getWorldCatRecord($isbn) {
 
 		$basic = new WorldCatBasic(WORLDCAT_BASIC_WSKEY);
@@ -76,108 +184,7 @@ class CatalogueItem {
 
 	}
 
-	/**
-	 * Update the node from external data sources.
-	 */
-	public function update() {
-
-		$this->updateFromTrove();
-
-		// Save the update time on the node
-		$this->node->setProperty('updated', time());
-		$this->node->save();
-	}
-
-	/**
-	 * Save the underlying neo4j node back to the database.
-	 */
-	public function save() {
-		return $this->node->save();
-	}
-
-	/**
-	 * Index this node in the catalogue index with the given key and value
-	 */
-	private function indexOn($key, $val) {
-
-		// Make sure the index exists.
-		$catalogueIndex = Neo4jConnection::getIndex('catalogue');
-		
-		return $catalogueIndex->add($this->node, $key, $val);
-
-	}
-
-	private function relationshipExists($start, $type, $end) {
-		$relationships = $start->getRelationships(array($type), Relationship::DirectionOut);
-		foreach ($relationships as $rel) {
-			if ($rel->getEndNode()->getId() === $end->getId()) return true;
-		}
-		return false;
-	}
-
-	private function updateFromTrove() {
-
-		$trove = new Trove(TROVE_KEY); 
-		
-		$id = $this->node->getProperty('trove_id');
-
-		// If there isn't already a trove ID, search on ISBN and title .
-		if (!$id) {
-
-			$searchTerms = array();
-
-			$isbn = $this->node->getProperty('isbn');
-			if ($isbn) $searchTerms[] = 'isbn:'.$isbn;
-
-			$title = $this->node->getProperty('title');
-			if ($title) $searchTerms[] = 'title:('.$title.')';
-
-			$author = $this->node->getProperty('author');
-			if ($author) $searchTerms[] = 'creator:('.$author.')';
-
-			$result = $trove->search(
-				implode(' ', $searchTerms), 	// Search terms
-				'book',									// Zone
-				array(),								// Limiting facets
-				0, 										// Start record
-				1, 										// Limit
-				'relevance', 							// Sort
-				'brief', 								// Detail level
-				array(), 								// Included data
-				array() 								// Included facets
-			);
-
-			// todo: What if the search returns no results or there is some error?
-			$id = $result->response->zone[0]->records->work[0]->id;
-
-			$this->node->setProperty('trove_id', $id);
-		}
-
-		if ($id) {
-
-			$this->node->setProperty('trove_id', $id);
-
-			$record = $trove->work($id, 'full', array('tags','comments','lists','workversions', 'holdings'));
-
-			// Update the issued year
-			$this->node->setProperty('issued_year', $record->work->issued);
-
-			// Update the publisher relationships
-			foreach ($record->work->version as $version) {
-				$this->setItemPublisher($version->record->publisher, $node);
-			}
-
-			// Update the holding relationships
-			foreach ($record->work->holding as $holding) {
-				$this->setItemHolding($holding, $node);
-			}
-
-			Debug::dump($record->work);
-
-		}
-	}
-
-
+	
 
 	private function setContributor($contributor) {
 
@@ -201,10 +208,17 @@ class CatalogueItem {
 
 		// Create relationship (if it doesn't already exist)
 		if ($newNode || !$this->relationshipExists($this->node, 'CREATED_BY', $contributorNode)) {
-			$this->node->relateTo($contributorNode, 'CREATED_BY')->save();
+			$this->getNode()->relateTo($contributorNode, 'CREATED_BY')->save();
 		}
 	}
 
+	/**
+	 * Relates this catalogue item to a tag node (and creates one if it doesn't exist).
+	 *
+	 * Tag data comes from the APDL data CSV.
+	 * 
+	 * @param string $tag The tag to relate to
+	 */
 	public function setTag($tag) {
 
 		$newNode = false;
@@ -227,37 +241,69 @@ class CatalogueItem {
 
 		// Create relationship (if it doesn't already exist)
 		if ($newNode || !$this->relationshipExists($this->node, 'HAS_TAG', $tagNode)) {
-			$this->node->relateTo($tagNode, 'HAS_TAG')->save();
+			$this->getNode()->relateTo($tagNode, 'HAS_TAG')->save();
 		}
 	}
 
-	private function setItemHolding($holdingData) {
+	/**
+	 * Set the next update time for this catalogue item.
+	 * 
+	 * This funciton is called by the data source extensions and schedules when an item should
+	 * be updated again. If the passed timestamp is sooner than the one currently in the database
+	 * this will bring the update time forward.
+	 *
+	 * @param Int $time The maximum number of seconds after now that an update is due.
+	 */
+	public function setNextUpdateTime($time) {
+		$requested = time() + $time;
+		
+		if ($this->NextUpdate == 0 || $this->NextUpdate > $requested) {
+			$this->NextUpdate = $requested;
+		}
+	}
+
+	/**
+	 * Link this catalogue item to a node representing a holding institution.
+	 * 
+	 * @param string $institutionId The intitution's identifying string.
+	 */
+	public function setItemHolding($institutionId) {
 
 		$newNode = false;
 
 		// Get the index
 		$index = Neo4jConnection::getIndex('holders');
 
-		$holderNode = $index->findOne('trove_nuc', $holdingData->nuc);
+		$holderNode = $index->findOne('trove_nuc', $institutionId);
 
 		if (!$holderNode) {
 			$holderNode = Neo4jConnection::get()->makeNode();
 			$holderNode->save();
-			$index->add($holderNode, 'trove_nuc', $holdingData->nuc);
+			$index->add($holderNode, 'trove_nuc', $institutionId);
 			$newNode = true;
 		}
 
 		$holderNode
-			->setProperty('trove_nuc', $holdingData->nuc)
+			->setProperty('trove_nuc', $institutionId)
 			->save();
 
 		// Existing relationships
 		if ($newNode || !$this->relationshipExists($this->node, 'HELD_BY', $holderNode)) {
-			$this->node->relateTo($holderNode, 'HELD_BY')->save();
+			$this->getNode()->relateTo($holderNode, 'HELD_BY')->save();
 		}
 	}
 
-	private function setItemPublisher($publisherName) {
+	/**
+	 * Relate this catalogue item to a publisher node with a PUBLISHED_BY relationship
+	 * in the neo4j graph.
+	 *
+	 * This checks the graph for a node in the 'publishers' index with a 'name' value of 
+	 * the $publisherName passed in. Creates the publisher node if it doesn't exist and
+	 * creates a relationship with this catalogue item.
+	 * 
+	 * @param string $publisherName The publisher's name.
+	 */
+	public function setItemPublisher($publisherName) {
 
 		$newNode = false;
 
@@ -281,7 +327,7 @@ class CatalogueItem {
 
 		// Make link
 		if ($newNode || !$this->relationshipExists($this->node, 'PUBLISHED_BY', $publisherNode)) {
-			$this->node->relateTo($publisherNode, 'PUBLISHED_BY')->save();
+			$this->getNode()->relateTo($publisherNode, 'PUBLISHED_BY')->save();
 		}
 		
 	}
@@ -292,7 +338,7 @@ class CatalogueItem {
 
 	public function findFriends() {
 		
-		$existingRelationships = $this->node->getRelationships(array('LIKES'), Relationship::DirectionOut);
+		$existingRelationships = $this->getNode()->getRelationships(array('LIKES'), Relationship::DirectionOut);
 		// foreach ($existing as $rel) {
 		// 	$rel->delete();
 		// }
@@ -329,19 +375,24 @@ class CatalogueItem {
 	}
 
 	/**
+	 * Add an event to this item's timeine.
+	 */
+	public function addTimelineEvent($time, $text) {
+
+	}
+
+	/**
 	 * The a result set of nodes with common relationships of the type passed, and how many are in common.
 	 * 
 	 * @param  string $type The relationship type
-	 * @return Everyman\Neo4j\Query\ResultSet The query results
+	 * @return ResultSet The query results
 	 */
 	private function getCommonRelationships($type) {
-		$id = $this->node->getId();
-
 		$neo =Neo4jConnection::get();
 
 		$queryTemplate = "START me=node({id}) MATCH me-[:$type]->rel<-[:$type]-them WHERE NOT (me=them) RETURN them, count(*) AS common ORDER BY common DESC";
 		$queryData = array(
-			'id' => (int) $id,
+			'id' => (int) $this->NodeId,
 			'type' => $type
 		);
 		$query = new Query($neo, $queryTemplate, $queryData);
@@ -349,35 +400,17 @@ class CatalogueItem {
 		return $nodes;
 	}
 
+	/**
+	 * A utility function to normalise an arbitrary score.
+	 * @param  int $min The minimum score in the set
+	 * @param  int $max The maximum score in the set
+	 * @param  int $score The score to normalise
+	 * @return float A number between 0 and 1.
+	 */
 	private function normalise($min, $max, $score) {
 		$range = $max-$min;
 		if ($range === 0) return 0;
 		return ($score-$min)/($max-$min);
-	}
-
-	/**
-	 * Get a CatalogueItem by BIB ID.
-	 * If an item with the providid $bib doesn't exists it will be created.
-	 * The primary reason for this wrapper is to ensure that new catalogue item nodes are always indexed by bib.
-	 */
-	public static function get($bib) {
-
-		$index = Neo4jConnection::getIndex('catalogue');
-
-		// Check for existing item
-		$itemNode = $index->findOne('bib', $bib);
-
-		// If the work doesn't exist in the DB yet, create it.
-		if ( is_null($itemNode) ) {
-			$itemNode = Neo4jConnection::get()->makeNode();
-			$itemNode->setProperty('bib', $bib);
-			$itemNode->save();
-
-			// Add it to the index
-			$index->add($itemNode, 'bib', $bib);
-		}
-
-		return new CatalogueItem($itemNode);
 	}
 
 }

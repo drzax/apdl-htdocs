@@ -1,0 +1,6 @@
+---
+Name: extensions
+---
+CatalogueItem:
+  extensions:
+    - CatalogueDataSourceExtensionTrove
