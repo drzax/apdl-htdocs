@@ -2,10 +2,14 @@
 use Everyman\Neo4j\Client;
 use Everyman\Neo4j\Cypher\Query;
 use Everyman\Neo4j\Index\NodeIndex;	
-use Everyman\Neo4j\Relationship;	
+use Everyman\Neo4j\Relationship;
+
+/**
+ * A testing playground!
+ */
 class Playground extends Controller {
 
-	private static $allowed_actions = array('UpdateTaskTests', 'ImportCatalogue', 'WorldCatIdentities', 'FindFriends');
+	private static $allowed_actions = array('UpdateFriendsTest', 'UpdateTaskTests', 'ImportCatalogue', 'WorldCatIdentities', 'FindFriends', 'TroveRecord');
 
 	private function neo() {
 		if (!$this->neo) {
@@ -19,18 +23,35 @@ class Playground extends Controller {
 		
 	}
 
+	public function TroveRecord($request) {
+
+		$id = (int) $request->param('ID');
+		$trove = new Trove(TROVE_KEY); 
+		$record = $trove->work($id, 'full', array('tags','comments','lists','workversions', 'holdings'));
+		Debug::dump($record);
+	}
+
 	public function WorldCatIdentities($request) {
 
-// 		$item = new CatalogueItem('963');
-
-// 		Debug::dump($item->getTroveRecord());
-
-
-// return;
 		$wc = new WorldCatIdentities();
+
+		$lccns = array(
+			'lccn-no2008-30495', // Smallman, Jake
+			'lccn-no2004-26558' // Uffelen, Chris van
+		);
+
+		$record = $wc->getRecord($lccns[0]);
+		// Debug::dump($record);
+		foreach ($record->associatedNames->name as $name) {
+			Debug::dump((string)$name->normName);
+		}
+		
+
+		return;
 
 		$tufte = array(
 			'Edward R. Tufte 1942-',
+			'Edward R. Tufte',
 			'Tufte, Edward R., 1942-',
 			'Graves-Morris, P. R.',
 			'Baker, George A. (George Allen), 1932-',
@@ -39,28 +60,47 @@ class Playground extends Controller {
 			'Tufte, Edward R. (Edward Rolf), 1942-'
 		);
 
-		// $node = $nodes[0]['x'];
-		// debug::dump($node->oclc_id);
-		// return;
+		$oclc = '228365461';
+		$name = substr($tufte[1], 0, strpos($tufte[1], ','));
 
-		$wc->search($tufte[3], '228365461');
+		$oclc = '780815260';
+		// $oclc = '0237502375';
+		$name = 'Haverkamp';
+
+		// $wc->openSearch($name, $oclc);
+		// 
+		// $wc->nameFinder('Haverkamp, Michael');
+		Debug::dump($wc->getRecordByName('aohagoiehgpie'));
 
 	}
 	
 	public function UpdateTaskTests($request) {
-
-		// Database connection
-		$neo = new Client(NEO4J_SERVER, NEO4J_PORT);
-		if (defined('NEO4J_USERNAME') && defined('NEO4J_PASSWORD')) {
-			$neo->getTransport()->setAuth(NEO4J_USERNAME, NEO4J_PASSWORD);
+		
+		$id = (int) $request->param('ID');
+		if ($id) {
+			$query = CatalogueItem::get()->filter('ID', $id);
+		} else {
+			$query = CatalogueItem::get()
+				->filter(array(
+					'NextUpdate:LessThan' => time()
+				))
+				->limit(10)
+				->sort('NextUpdate', 'ASC');
 		}
 
-		$queryTemplate = 'START n=node(*) WHERE HAS(n.bib) AND (NOT(HAS(n.updated)) OR n.updated < {timestamp}) RETURN n LIMIT 3';
+		
+		$remaining = $query
+			->map('ID', 'ID')
+			->toArray();
 
-		$query = new Query($neo, $queryTemplate, array('timestamp'=>(time()-3600*24*7)));
-		debug::dump($query);
-		$nodes = $query->getResultSet();
-		debug::dump($nodes);
+		Debug::dump($remaining);
+
+		// lets process our first item - note that we take it off the list of things left to do
+		$item = CatalogueItem::get()->byID(array_shift($remaining));
+		
+		// Get the node data
+		$item->updateCatalogueData();
+
 	}
 
 	/**
@@ -69,78 +109,52 @@ class Playground extends Controller {
 	 * from additional data sources and to also
 	 */
 	public function ImportCatalogue($request) {
+		$item = CatalogueItem::get()->first();
+		$item->write();
 
-		$items = array();
+	}
 
-		$csv = new CSVParser(dirname(__FILE__) . "/../../assets/apdlbooks_withlocationtags - pnx_pass_5.csv");
-		foreach ($csv as $row) {
+	public function UpdateFriendsTest($request) {
+		$id = (int) $request->param('ID');
+		if ($id) {
+			$item = CatalogueItem::get()->filter('NodeId', $id)->first();
+		} else {
+			$query = CatalogueItem::get()
+				->limit(1)
+				->sort('FriendsUpdated', 'ASC');
 
-			if (!array_key_exists($row['BIB_ID'], $items)) {
-				// Create the catalogue item object
-				$item = CatalogueItem::get($row['BIB_ID']);
-
-
-				if (trim($row['TITLE'])) {
-					$item->title = trim($row['TITLE']);
-				}
-
-				if (trim($row['ISBN'])) {
-					// Clean the ISBN field
-					preg_match('/[^\s]+/', $row['ISBN'], $match);
-					$isbn = $match[0];
-					$item->isbn = $isbn;
-				}
-
-				if (trim($row['AUTHOR'])) {
-					$item->author = trim($row['AUTHOR']);
-				}
-
-				$item->save();
-
-				$items[$row['BIB_ID']] = $item;
-
-			}
-
-			if (trim($row['TAGS'])) {
-				$items[$row['BIB_ID']]->setTag(trim($row['TAGS']));
-			}
+			$remaining = $query
+				->map('ID', 'ID')
+				->toArray();
 		}
+
+
+		$remaining = $query
+			->map('ID', 'ID')
+			->toArray();
+
+		// lets process our first item - note that we take it off the list of things left to do
+		$item = CatalogueItem::get()->byID(array_shift($remaining));
+		
+		// Get the node data
+		echo $item->updateFriends();
+		echo memory_get_peak_usage();
 	}
 
 	public function FindFriends($request) {
 
 		$id = (int) $request->param('ID');
+		if ($id) {
+			$item = CatalogueItem::get()->filter('NodeId', $id)->first();
+		} else {
+			$item = CatalogueItem::get()->sort('RAND()')->first();
+		}
+		
+		$friends = $item->findFriends();
 
-		$item = new CatalogueItem($id);
-
-		Debug::dump($item->getTroveRecord());
-
-		// $searchTerms = array();
-
-		// $isbn = $item->getNode()->getProperty('isbn');
-		// if ($isbn) $searchTerms[] = 'isbn:'.$isbn;
-
-		// $title = $item->getNode()->getProperty('title');
-		// if ($title) $searchTerms[] = 'title:('.$title.')';
-
-		// $author = $item->getNode()->getProperty('author');
-		// if ($author) $searchTerms[] = 'creator:('.$author.')';
-
-		// $trove = new Trove(TROVE_KEY); 
-		// $result = $trove->search(
-		// 	implode(' ', $searchTerms), 	// Search terms
-		// 	'book',							// Zone
-		// 	array(),						// Limiting facets
-		// 	0, 								// Start record
-		// 	1 								// Limit
-		// );
-
-		// Debug::dump($result);
-
-
-		// $item->findFriends();
-
-
+		debug::dump("{$item->NodeId}: {$item->Title} by {$item->Author}");
+		debug::dump(count($friends));
+		debug::dump($friends);
 	}
 
 }
