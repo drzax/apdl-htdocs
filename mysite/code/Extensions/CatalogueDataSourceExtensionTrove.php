@@ -17,9 +17,9 @@ class CatalogueDataSourceExtensionTrove extends DataExtension {
 	public function onUpdateCatalogueData() {
 
 		// Make sure an update is actually required.
-		if ($this->owner->TroveLastUpdate > time() - self::$updateInterval) {
-			return;
-		}
+		// if ($this->owner->TroveLastUpdate + self::$updateInterval > time()) {
+		// 	return;
+		// }
 
 		// Instantiate the Trove API connector.
 		$trove = new Trove(TROVE_KEY); 
@@ -71,9 +71,11 @@ class CatalogueDataSourceExtensionTrove extends DataExtension {
 						$issued = $version->issued;
 						if ($issued && !is_array($issued) && isset($version->record)) {
 							if (is_array($version->record)) {
-								$publisher = $version->record[0]->publisher;
+								if (isset($version->record[0]->publisher))
+									$publisher = $version->record[0]->publisher;
 							} else {
-								$publisher = $version->record->publisher;
+								if (isset($version->record->publisher))
+									$publisher = $version->record->publisher;
 							}
 							$publisher_parts = explode(':', $publisher);
 							$publisher = trim(implode(' ', array_reverse($publisher_parts)));
@@ -95,6 +97,19 @@ class CatalogueDataSourceExtensionTrove extends DataExtension {
 			foreach ($record->work->holding as $holding) {
 				if (isset($holding->nuc)) {
 					$this->owner->setItemHolding($holding->nuc);
+				}
+			}
+
+			// Update the contributor relationships
+			// Debug::dump($record->work);
+			if (isset($record->work->contributor)) {
+				$wci = new WorldCatIdentities();
+				foreach ($record->work->contributor as $contributor) {
+					$contributorRecord = $wci->getRecordByName($contributor);
+
+					if ($contributorRecord && isset($contributorRecord->pnkey)) {
+						$this->owner->setItemContributor((string)$contributorRecord->pnkey);
+					}
 				}
 			}
 		}

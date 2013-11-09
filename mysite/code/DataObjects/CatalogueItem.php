@@ -144,7 +144,6 @@ class CatalogueItem extends DataObject {
 		// Save the update time on the node
 		$time = time();
 		$this->setNodeProperty('updated', $time);
-		$this->DataUpdated = $time;
 		$this->write();
 	}
 
@@ -177,68 +176,28 @@ class CatalogueItem extends DataObject {
 
 	}
 
-	/**
-	 * Check if a relationship exists between two nodes on the neo4j database.
-	 *
-	 * @todo  This shouldn't be here
-	 * @param  Node $start The starting node
-	 * @param  string $type  The type of relationship to check for
-	 * @param  Node $end The ending node.
-	 * @return boolean True if the relationship exists.
-	 */
-	private function relationshipExists($start, $type, $end) {
-
-		$relationships = $start->getRelationships(array($type), Relationship::DirectionOut);
-		foreach ($relationships as $rel) {
-			if ($rel->getEndNode()->getId() === $end->getId()) return true;
-		}
-		return false;
-	}
-
-
-	/**
-	 * Get the WorldCat record for a book by ISBN.
-	 * @todo  This shouldn't be here.
-	 * @param  string $isbn The ISBN for a book to retrieve details for.
-	 * @return stdClass The WorldCat record.
-	 */
-	public function getWorldCatRecord($isbn) {
-
-		$basic = new WorldCatBasic(WORLDCAT_BASIC_WSKEY);
-
-		$basic->setQuery($isbn);
-
-		$r = $basic->request();
-		$items = $basic->getValues($r->getBody(), "entry");
-
-		return $items[0];
-
-	}
-
-	
-
-	private function setContributor($contributor) {
+	public function setItemContributor($lccn) {
 
 		$newNode = false;
 
 		// Get the index
-		$index = Neo4jConnection::getIndex('creators');
+		$index = Neo4jConnection::getIndex('contributors');
 		
-		$contributorNode = $index->findOne('name', $contributor);
+		$contributorNode = $index->findOne('lccn', $lccn);
 
 		if (!$contributorNode) {
 			$contributorNode = Neo4jConnection::get()->makeNode();
 			$contributorNode->save();
-			$index->add($contributorNode, 'name', $contributor);
+			$index->add($contributorNode, 'lccn', $lccn);
 			$newNode = true;
 		}
 
 		$contributorNode
-			->setProperty('name', $contributor)
+			->setProperty('lccn', $lccn)
 			->save();
 
 		// Create relationship (if it doesn't already exist)
-		if ($newNode || !$this->relationshipExists($this->node, 'CREATED_BY', $contributorNode)) {
+		if ($newNode || !Neo4jConnection::relationshipExists($this->getNode(), 'CREATED_BY', $contributorNode)) {
 			$this->getNode()->relateTo($contributorNode, 'CREATED_BY')->save();
 		}
 	}
@@ -271,7 +230,7 @@ class CatalogueItem extends DataObject {
 			->save();
 
 		// Create relationship (if it doesn't already exist)
-		if ($newNode || !$this->relationshipExists($this->node, 'HAS_TAG', $tagNode)) {
+		if ($newNode || !Neo4jConnection::relationshipExists($this->getNode(), 'HAS_TAG', $tagNode)) {
 			$this->getNode()->relateTo($tagNode, 'HAS_TAG')->save();
 		}
 	}
@@ -287,8 +246,7 @@ class CatalogueItem extends DataObject {
 	 */
 	public function setNextUpdateTime($time) {
 		$requested = time() + $time;
-		
-		if ($this->NextUpdate == 0 || $this->NextUpdate > $requested) {
+		if ($this->NextUpdate === 0 || $this->NextUpdate < $requested) {
 			$this->NextUpdate = $requested;
 		}
 	}
@@ -319,7 +277,7 @@ class CatalogueItem extends DataObject {
 			->save();
 
 		// Existing relationships
-		if ($newNode || !$this->relationshipExists($this->node, 'HELD_BY', $holderNode)) {
+		if ($newNode || !Neo4jConnection::relationshipExists($this->getNode(), 'HELD_BY', $holderNode)) {
 			$this->getNode()->relateTo($holderNode, 'HELD_BY')->save();
 		}
 	}
@@ -357,7 +315,7 @@ class CatalogueItem extends DataObject {
 			->save();
 
 		// Make link
-		if ($newNode || !$this->relationshipExists($this->node, 'PUBLISHED_BY', $publisherNode)) {
+		if ($newNode || !Neo4jConnection::relationshipExists($this->getNode(), 'PUBLISHED_BY', $publisherNode)) {
 			$this->getNode()->relateTo($publisherNode, 'PUBLISHED_BY')->save();
 		}
 		
