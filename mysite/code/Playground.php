@@ -9,7 +9,7 @@ use Everyman\Neo4j\Relationship;
  */
 class Playground extends Controller {
 
-	private static $allowed_actions = array('UpdateFriendsTest', 'UpdateTaskTests', 'ImportCatalogue', 'WorldCatIdentities', 'FindFriends', 'TroveRecord');
+	private static $allowed_actions = array('AddingEvents', 'UpdateFriendsTest', 'UpdateTaskTests', 'ImportCatalogue', 'WorldCatIdentities', 'FindFriends', 'TroveRecord');
 
 	private function neo() {
 		if (!$this->neo) {
@@ -114,6 +114,18 @@ class Playground extends Controller {
 
 	}
 
+	public function AddingEvents($request) {
+		$id = (int) $request->param('ID');
+		if ($id) {
+			$item = CatalogueItem::get()->filter('NodeId', $id)->first();
+		} else {
+			$item = CatalogueItem::get()->sort('RAND()')->first();
+		}
+
+		// $item->addTimelineEvent('fake', time(), 'Fake');
+		$item->removeTimelineEvent('fake');
+	}
+
 	public function UpdateFriendsTest($request) {
 		$id = (int) $request->param('ID');
 		if ($id) {
@@ -138,7 +150,6 @@ class Playground extends Controller {
 		
 		// Get the node data
 		echo $item->updateFriends();
-		echo memory_get_peak_usage();
 	}
 
 	public function FindFriends($request) {

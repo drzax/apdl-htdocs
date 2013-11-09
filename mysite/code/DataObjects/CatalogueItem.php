@@ -486,11 +486,114 @@ class CatalogueItem extends DataObject {
 		return $finalList;
 	}
 
+	public function removeTimelineEvent($key) {
+		$event = $this->getNewOrExistingNode('timeline', 'key', $key);
+		$this->removeNodeFromTimeline($event);
+		$event->delete();
+	}
+
+	private function removeNodeFromTimeline($node) {
+
+		$neo = Neo4jConnection::get();
+
+		// If this event node is already in a linked list, it needs to be removed.
+		$existingRels = $node->getRelationships(array('NEXT'), Relationship::DirectionAll);
+		if (count($existingRels)) {
+			$queryTemplate = "START e=node({id})
+				MATCH b-[relBefore:NEXT]->e-[relAfter:NEXT]->a
+				CREATE b-[:NEXT]->a
+				DELETE relBefore, relAfter";
+
+			$queryData = array(
+				'id' => $node->getId()
+			);
+
+			$query = new Query($neo, $queryTemplate, $queryData);
+			$query->getResultSet();
+		}
+	}
+
 	/**
 	 * Add an event to this item's timeine.
 	 */
-	public function addTimelineEvent($time, $text) {
+	public function addTimelineEvent($key, $time, $text) {
 
+		$neo = Neo4jConnection::get();
+
+		// Get a node for this timeline event
+		$event = $this->getNewOrExistingNode('timeline', 'key', $key);
+		$event
+			->setProperty('time', $time)
+			->setProperty('text', $text)
+			->save();
+
+		// If this event node is already in a linked list, it needs to be removed.
+		$this->removeNodeFromTimeline($event);
+
+		$item = $this->getNode();
+
+		// Get a reference to the current status (if there is one)
+		$latestEventRel = $item->getFirstRelationship(array('NEXT'), Relationship::DirectionIn);
+			
+		// If there isn't a latest relationship, this item has no events - start the linked list.
+		if (!$latestEventRel) {
+			$latestEventRel = $neo->makeRelationship();
+			$latestEventRel
+				->setStartNode($item)
+				->setEndNode($item)
+				->setType('NEXT')
+				->save();
+		}
+
+		// Debug::dump($latestEventRel);
+
+		$queryTemplate = "START item=node({id}) 
+			MATCH item-[:NEXT*0..]->before, // before could be same as item
+			after-[:NEXT*0..]->item, // after could be same as item
+			before-[old:NEXT]->after
+			WHERE ( NOT(HAS(before.time)) OR before.time <= {time} ) 
+			AND ( NOT(HAS(after.time)) OR after.time >= {time} )
+			RETURN before, after, old";
+
+		$queryData = array(
+			'id' => (int) $item->getId(),
+			'time' => (int) $time
+		);
+
+		$query = new Query($neo, $queryTemplate, $queryData);
+		$results = $query->getResultSet();
+		Debug::dump($results[0]);
+		
+		$results[0]['old']->delete();
+		$results[0]['before']->relateTo($event, 'NEXT')->save();
+		$event->relateTo($results[0]['after'], 'NEXT')->save();
+	}
+
+	/**
+	 * Query an index for an existing node. If it exists, return it, otherwise create a new
+	 * node and add it to the index.
+	 * 
+	 * @param  [string] $index The name of the index to look up
+	 * @param  [string] $key   The key in the index
+	 * @param  [string] $value The value in the index
+	 * @return [Node] An existing or new node.
+	 */
+	private function getNewOrExistingNode($index, $key, $value) {
+
+		// Get the index
+		$index = Neo4jConnection::getIndex($index);
+		
+		// Find an existing event node
+		$node = $index->findOne($key, $value);
+
+		// Create the publisher node and add to index if it doesn't exist.
+		if (!$node) {
+			$node = Neo4jConnection::get()->makeNode();
+			$node->save();
+			$index->add($node, $key, $value);
+		}
+
+		return $node;
 	}
 
 	/**
