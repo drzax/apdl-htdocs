@@ -326,6 +326,10 @@ class CatalogueItem extends DataObject {
 
 	}
 
+	public function updateFriends() {
+
+	}
+
 	public function findFriends() {
 		
 		$existingRelationships = $this->getNode()->getRelationships(array('LIKES'), Relationship::DirectionOut);
@@ -333,7 +337,56 @@ class CatalogueItem extends DataObject {
 		// 	$rel->delete();
 		// }
 
+
+		$potentialFriends = $this->findPotentialFriends();
+		$actualFriends = array();
+
+		if (count($potentialFriends)) {
+			$max = $potentialFriends[0]['Average'];
+			$min = $potentialFriends[count($potentialFriends)-1]['Average'];
+
+			foreach ($potentialFriends as $friend) {
+
+				$ratio = $this->normalise($min, $max, $friend['Average']);
+				if ($ratio > 0.5) {
+					$actualFriends[] = $friend;
+				} else {
+					// We can break here because nodes are sorted, we won't find anymore.
+					break;
+				}
+			}
+		}
+
+		debug::dump("{$this->NodeId}: {$this->Title} by {$this->Author}");
+		debug::dump(count($actualFriends));
+		debug::dump($actualFriends);
+		debug::dump($potentialFriends);
+
+	}
+
+	/**
+	 * Return an array of potential friends.
+	 * Format:
+	 * array(
+	 * 	'NodeId' => 1234,
+	 * 	'Relationships' => array(
+	 * 		'[RelType]' => [RelValue]
+	 * 		...
+	 * 	),
+	 * 	'Average' => 0.037
+	 * );
+	 * @return [type] [description]
+	 */
+	private function findPotentialFriends() {
 		$potentialFriends = array();
+
+		$relationshipWeightings = array(
+			'HELD_BY' => .5,
+			'HAS_TAG' => 1,
+			'CREATED_BY' => 1.8,
+			'ASSOCIATED_AUTHORS' => 1.5,
+			'ASSOCIATED_AUTHOR_SUBJECTS' => .6
+		);
 
 		foreach (array('HELD_BY','HAS_TAG','CREATED_BY') as $relationshipType) {
 			$related = $this->getCommonRelationships($relationshipType);
@@ -341,27 +394,80 @@ class CatalogueItem extends DataObject {
 			if (count($related)) {
 				$max = $related[0]['common'];
 				$min = $related[count($related)-1]['common'];
-				
+
 				foreach ($related as $row) {
 
 					if (!isset($potentialFriends[$row['them']->getId()])) {
-						$potentialFriends[$row['them']->getId()] = array(
-							// 'node' => $row['them']
-						);
+						$potentialFriends[$row['them']->getId()] = array();
 					}
 
 					$ratio = $this->normalise($min, $max, $row['common']);
-					if ($ratio > 0.5) {
-						$potentialFriends[$row['them']->getId()][$relationshipType] = $ratio;
-						// $this->row->relateTo($row['them'], 'LIKES')->save();
-					}
+					$potentialFriends[$row['them']->getId()][$relationshipType] = $ratio;
+				}
+			}
+		}
+
+		$associatedAuthors = $this->getAssociatedAuthorRelationships();
+		if (count($associatedAuthors)) {
+			$max = $associatedAuthors[0]['common'];
+			$min = $associatedAuthors[count($associatedAuthors)-1]['common'];
+
+			foreach ($associatedAuthors as $row) {
+				if (!isset($potentialFriends[$row['them']->getId()])) {
+					$potentialFriends[$row['them']->getId()] = array();
+				}
+
+				$ratio = $this->normalise($min, $max, $row['common']);
+				$potentialFriends[$row['them']->getId()]['ASSOCIATED_AUTHORS'] = $ratio;
+			}
+		}
+
+		$associatedAuthorSubjects = $this->getAuthorsWithSameFastHeading();
+		if (count($associatedAuthorSubjects)) {
+			$max = $associatedAuthorSubjects[0]['common'];
+			$min = $associatedAuthorSubjects[count($associatedAuthorSubjects)-1]['common'];
+
+			foreach ($associatedAuthorSubjects as $row) {
+				if (!isset($potentialFriends[$row['them']->getId()])) {
+					$potentialFriends[$row['them']->getId()] = array();
+				}
+
+				$ratio = $this->normalise($min, $max, $row['common']);
+				$potentialFriends[$row['them']->getId()]['ASSOCIATED_AUTHOR_SUBJECTS'] = $ratio;
+			}
+		}
+
+		$finalList = array();
+		foreach ($potentialFriends as $id => &$friend) {
+			$relCount = 0;
+			foreach ($relationshipWeightings as $rel => $weight) {
+				if (isset($friend[$rel]) && $friend[$rel] > 0) {
+					$friend[$rel] = $friend[$rel] * $weight;
+					$relCount++;
+				} else {
+					$friend[$rel] = 0;
 				}
 			}
 
+			if ($relCount > 1) {
+				$finalList[]=array(
+					'NodeId' => $id,
+					'Relationships' => $friend,
+					'Average' => array_sum($friend) / count($friend)
+				);
+			}
 		}
 
-		debug::dump($potentialFriends);
-			
+		function cmp($a, $b) {
+			if ($a['Average'] == $b['Average']) {
+				return 0;
+			}
+			return ($a['Average'] > $b['Average']) ? -1 : 1;
+		}
+
+		usort($finalList, "cmp");
+
+		return $finalList;
 	}
 
 	/**
@@ -372,7 +478,9 @@ class CatalogueItem extends DataObject {
 	}
 
 	/**
-	 * The a result set of nodes with common relationships of the type passed, and how many are in common.
+	 * Get nodes with common in-bound one-degree relationships of the specified type to this catalogue item.
+	 *
+	 * For example, all nodes that have one or more tags in common with this item.
 	 * 
 	 * @param  string $type The relationship type
 	 * @return ResultSet The query results
@@ -380,10 +488,46 @@ class CatalogueItem extends DataObject {
 	private function getCommonRelationships($type) {
 		$neo =Neo4jConnection::get();
 
-		$queryTemplate = "START me=node({id}) MATCH me-[:$type]->rel<-[:$type]-them WHERE NOT (me=them) RETURN them, count(*) AS common ORDER BY common DESC";
+		$queryTemplate = "START me=node({id})
+			MATCH me-[:$type]->rel<-[:$type]-them
+			WHERE NOT (me=them)
+			RETURN them, count(*) AS common
+			ORDER BY common DESC";
 		$queryData = array(
-			'id' => (int) $this->NodeId,
+			'id' => (int) $this->getNode()->getId(),
 			'type' => $type
+		);
+		$query = new Query($neo, $queryTemplate, $queryData);
+		$nodes = $query->getResultSet();
+		return $nodes;
+	}
+
+	private function getAuthorsWithSameFastHeading() {
+		$neo =Neo4jConnection::get();
+
+		$queryTemplate = "START me=node({id})
+			MATCH me-[:CREATED_BY]->this_creator-[:ASSOCIATED_WITH_SUBJECT]->subject<-[:ASSOCIATED_WITH_SUBJECT]-other_creator<-[:CREATED_BY]-them
+			WHERE NOT (me=them)
+			RETURN them, count(*) AS common
+			ORDER BY common DESC";
+		$queryData = array(
+			'id' => (int) $this->getNode()->getId()
+		);
+		$query = new Query($neo, $queryTemplate, $queryData);
+		$nodes = $query->getResultSet();
+		return $nodes;
+	}
+
+	private function getAssociatedAuthorRelationships() {
+		$neo =Neo4jConnection::get();
+
+		$queryTemplate = "START me=node({id})
+			MATCH me-[:CREATED_BY]->creator<-[:ASSOCIATED_WITH]->other_creator<-[:CREATED_BY]-them
+			WHERE NOT (me=them)
+			RETURN them, count(*) AS common
+			ORDER BY common DESC";
+		$queryData = array(
+			'id' => (int) $this->getNode()->getId()
 		);
 		$query = new Query($neo, $queryTemplate, $queryData);
 		$nodes = $query->getResultSet();
@@ -399,7 +543,7 @@ class CatalogueItem extends DataObject {
 	 */
 	private function normalise($min, $max, $score) {
 		$range = $max-$min;
-		if ($range === 0) return 0;
+		if ($range == 0) return 0;
 		return ($score-$min)/($max-$min);
 	}
 
