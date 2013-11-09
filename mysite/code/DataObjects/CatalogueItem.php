@@ -333,6 +333,8 @@ class CatalogueItem extends DataObject {
 
 	public function updateFriends() {
 
+		$output = '';
+
 		$existingRelationships = $this->getNode()->getRelationships(array('LIKES'), Relationship::DirectionOut);
 		$remaining = array();
 		
@@ -357,6 +359,7 @@ class CatalogueItem extends DataObject {
 			// Create a relationship
 			if ($relationship === false) {
 				$relationship = $this->getNode()->relateTo($likes, 'LIKES');
+				$output .= "$this->nodeId now likes " . $likes->getId . "\n";
 			}
 
 			$relationship->setProperty('strength', $friend['Average']);
@@ -373,7 +376,7 @@ class CatalogueItem extends DataObject {
 		$this->FriendsUpdated = time();
 		$this->write();
 
-		return "Friends updated for: {$this->NodeId}: {$this->Title} by {$this->Author}\n";
+		return "Friends updated for: {$this->NodeId}: {$this->Title} by {$this->Author}\n $output";
 
 	}
 
