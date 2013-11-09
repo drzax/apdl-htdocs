@@ -20,7 +20,7 @@ class CatalogueDataSourceExtensionTrove extends DataExtension {
 		// if ($this->owner->TroveLastUpdate + self::$updateInterval > time()) {
 		// 	return;
 		// }
-
+		
 		// Instantiate the Trove API connector.
 		$trove = new Trove(TROVE_KEY); 
 		
@@ -106,7 +106,7 @@ class CatalogueDataSourceExtensionTrove extends DataExtension {
 				$wci = new WorldCatIdentities();
 				foreach ($record->work->contributor as $contributor) {
 					$contributorRecord = $wci->getRecordByName($contributor);
-
+					
 					if ($contributorRecord && isset($contributorRecord->pnkey)) {
 						$this->owner->setItemContributor((string)$contributorRecord->pnkey);
 					}

@@ -4,3 +4,4 @@ Name: extensions
 CatalogueItem:
   extensions:
     - CatalogueDataSourceExtensionTrove
+    - CatalogueDataSourceExtensionWorldCat
