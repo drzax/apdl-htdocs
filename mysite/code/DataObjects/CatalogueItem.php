@@ -31,7 +31,7 @@ class CatalogueItem extends DataObject {
 	
 	private static $default_sort = 'BIB';
 	
-	private static $summary_fields = array('BIB','NodeId','Title','Author');	
+	private static $summary_fields = array('BIB','NodeId','Title','Author');
 
 	private $indexedProperties = array(
 		'title',
@@ -328,16 +328,16 @@ class CatalogueItem extends DataObject {
 
 	public function updateFriends() {
 
-	}
+			}
 
 	public function findFriends() {
-		
+
 		$existingRelationships = $this->getNode()->getRelationships(array('LIKES'), Relationship::DirectionOut);
 		// foreach ($existing as $rel) {
 		// 	$rel->delete();
 		// }
 
-
+		
 		$potentialFriends = $this->findPotentialFriends();
 		$actualFriends = array();
 
@@ -346,13 +346,10 @@ class CatalogueItem extends DataObject {
 			$min = $potentialFriends[count($potentialFriends)-1]['Average'];
 
 			foreach ($potentialFriends as $friend) {
-
+				
 				$ratio = $this->normalise($min, $max, $friend['Average']);
 				if ($ratio > 0.5) {
 					$actualFriends[] = $friend;
-				} else {
-					// We can break here because nodes are sorted, we won't find anymore.
-					break;
 				}
 			}
 		}
@@ -365,7 +362,7 @@ class CatalogueItem extends DataObject {
 	}
 
 	/**
-	 * Return an array of potential friends.
+	 * Return an array of potential friends. 
 	 * Format:
 	 * array(
 	 * 	'NodeId' => 1234,
@@ -458,15 +455,6 @@ class CatalogueItem extends DataObject {
 			}
 		}
 
-		function cmp($a, $b) {
-			if ($a['Average'] == $b['Average']) {
-				return 0;
-			}
-			return ($a['Average'] > $b['Average']) ? -1 : 1;
-		}
-
-		usort($finalList, "cmp");
-
 		return $finalList;
 	}
 
@@ -488,10 +476,10 @@ class CatalogueItem extends DataObject {
 	private function getCommonRelationships($type) {
 		$neo =Neo4jConnection::get();
 
-		$queryTemplate = "START me=node({id})
-			MATCH me-[:$type]->rel<-[:$type]-them
-			WHERE NOT (me=them)
-			RETURN them, count(*) AS common
+		$queryTemplate = "START me=node({id}) 
+			MATCH me-[:$type]->rel<-[:$type]-them 
+			WHERE NOT (me=them) 
+			RETURN them, count(*) AS common 
 			ORDER BY common DESC";
 		$queryData = array(
 			'id' => (int) $this->getNode()->getId(),
@@ -505,10 +493,10 @@ class CatalogueItem extends DataObject {
 	private function getAuthorsWithSameFastHeading() {
 		$neo =Neo4jConnection::get();
 
-		$queryTemplate = "START me=node({id})
-			MATCH me-[:CREATED_BY]->this_creator-[:ASSOCIATED_WITH_SUBJECT]->subject<-[:ASSOCIATED_WITH_SUBJECT]-other_creator<-[:CREATED_BY]-them
-			WHERE NOT (me=them)
-			RETURN them, count(*) AS common
+		$queryTemplate = "START me=node({id}) 
+			MATCH me-[:CREATED_BY]->this_creator-[:ASSOCIATED_WITH_SUBJECT]->subject<-[:ASSOCIATED_WITH_SUBJECT]-other_creator<-[:CREATED_BY]-them 
+			WHERE NOT (me=them) 
+			RETURN them, count(*) AS common 
 			ORDER BY common DESC";
 		$queryData = array(
 			'id' => (int) $this->getNode()->getId()
@@ -521,10 +509,10 @@ class CatalogueItem extends DataObject {
 	private function getAssociatedAuthorRelationships() {
 		$neo =Neo4jConnection::get();
 
-		$queryTemplate = "START me=node({id})
-			MATCH me-[:CREATED_BY]->creator<-[:ASSOCIATED_WITH]->other_creator<-[:CREATED_BY]-them
-			WHERE NOT (me=them)
-			RETURN them, count(*) AS common
+		$queryTemplate = "START me=node({id}) 
+			MATCH me-[:CREATED_BY]->creator<-[:ASSOCIATED_WITH]->other_creator<-[:CREATED_BY]-them 
+			WHERE NOT (me=them) 
+			RETURN them, count(*) AS common 
 			ORDER BY common DESC";
 		$queryData = array(
 			'id' => (int) $this->getNode()->getId()
