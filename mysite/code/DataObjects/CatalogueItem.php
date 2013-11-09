@@ -676,4 +676,9 @@ class CatalogueItem extends DataObject {
 		return ($score-$min)/($max-$min);
 	}
 
+	// Remove dates from the author's name.
+	public function sanitiseAuthor($author) {
+		return preg_replace('/, [0-9 \.-]+/', '', $author);
+	}
+
 }

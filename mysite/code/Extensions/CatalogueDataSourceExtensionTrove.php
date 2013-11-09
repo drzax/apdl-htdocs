@@ -116,7 +116,7 @@ class CatalogueDataSourceExtensionTrove extends DataExtension {
 			if (isset($record->work->contributor)) {
 				$wci = new WorldCatIdentities();
 				foreach ($record->work->contributor as $contributor) {
-					$contributorRecord = $wci->getRecordByName($contributor);
+					$contributorRecord = $wci->getRecordByName($this->owner->sanitiseAuthor($contributor));
 					
 					if (
 						$contributorRecord && 
