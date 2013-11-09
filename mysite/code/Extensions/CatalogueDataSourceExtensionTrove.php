@@ -41,18 +41,23 @@ class CatalogueDataSourceExtensionTrove extends DataExtension {
 			$author = $this->owner->getNode()->getProperty('author');
 			if ($author) $searchTerms[] = 'creator:('.$author.')';
 
-			$result = $trove->search(
-				implode(' ', $searchTerms), 			// Search terms
-				'book',									// Zone
-				array(),								// Limiting facets
-				0, 										// Start record
-				1, 										// Limit
-				'relevance', 							// Sort
-				'brief', 								// Detail level
-				array(), 								// Included data
-				array() 								// Included facets
-			);
-
+			try {
+				$result = $trove->search(
+					implode(' ', $searchTerms), 			// Search terms
+					'book',									// Zone
+					array(),								// Limiting facets
+					0, 										// Start record
+					1, 										// Limit
+					'relevance', 							// Sort
+					'brief', 								// Detail level
+					array(), 								// Included data
+					array() 								// Included facets
+				);
+			} catch (Exception $e) {
+				return;
+				// todo: Better handle this error.
+			}
+			
 			// todo: What if the search returns no results or there is some error?
 			if (isset($result->response->zone[0]->records->work[0]->id)) {
 				$id = $result->response->zone[0]->records->work[0]->id;
@@ -62,7 +67,13 @@ class CatalogueDataSourceExtensionTrove extends DataExtension {
 
 		if ($id) {
 
-			$record = $trove->work($id, 'full', array('tags','comments','lists','workversions', 'holdings'));
+			try {
+				$record = $trove->work($id, 'full', array('tags','comments','lists','workversions', 'holdings'));
+			} catch (Exception $e) {
+				return;
+				// todo: Better handle this.
+			}
+			
 
 			// Update the issued year
 			if (isset($record->work->version)) {

@@ -90,7 +90,14 @@ class Trove {
 			http_build_query($params)
 		));
 
-		return json_decode(file_get_contents($url));
+		$result = file_get_contents($url);
+		if ($result === false) {
+			throw new Exception('Error retrieving data from Trove. See error log for more information.');
+		}
+
+		$json = json_decode($result);
+
+		return $json;
 	}
 
 }
