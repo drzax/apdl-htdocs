@@ -414,7 +414,7 @@ class CatalogueItem extends DataObject {
 	 * );
 	 * @return [type] [description]
 	 */
-	private function findPotentialFriends() {
+	public function findPotentialFriends() {
 		$potentialFriends = array();
 
 		$relationshipWeightings = array(
