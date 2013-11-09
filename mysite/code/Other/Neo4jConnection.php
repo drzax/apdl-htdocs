@@ -1,12 +1,13 @@
 <?php 
 
+use Everyman\Neo4j\Node;
 use Everyman\Neo4j\Client;
 use Everyman\Neo4j\Cypher\Query;
 use Everyman\Neo4j\Index\NodeIndex;
 use Everyman\Neo4j\Relationship;
 
 /**
- * A singleton for neo4j connection establishment
+ * A singleton for neo4j connection establishment and to provide some utilities
  */
 class Neo4jConnection {
 
@@ -32,5 +33,26 @@ class Neo4jConnection {
 		}
 		
 		return self::$indexes[$name];
+	}
+
+	/**
+	 * Check if a relationship exists between two nodes on the neo4j database.
+	 *
+	 * @param  Node $start The starting node
+	 * @param  string $type  The type of relationship to check for (can be an array)
+	 * @param  Node $end The ending node.
+	 * @return boolean True if the relationship exists.
+	 */
+	public static function relationshipExists($start, $type, $end) {
+
+		if (!is_array($type)) {
+			$type = array($type);
+		}
+
+		$relationships = $start->getRelationships($type, Relationship::DirectionOut);
+		foreach ($relationships as $rel) {
+			if ($rel->getEndNode()->getId() === $end->getId()) return true;
+		}
+		return false;
 	}
 }
