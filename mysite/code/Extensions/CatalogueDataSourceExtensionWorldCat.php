@@ -64,7 +64,7 @@ class CatalogueDataSourceExtensionWorldCat extends DataExtension {
 
 	/**
 	 * Associate this author with a language
-	 *
+	 * 
 	 * @param  [Node] $node The author node
 	 * @param  [String] $lang The language code
 	 * @return [Node] The language node
@@ -98,7 +98,7 @@ class CatalogueDataSourceExtensionWorldCat extends DataExtension {
 
 	/**
 	 * Associate an author node with a 'FAST' heading.
-	 *
+	 * 
 	 * @param  [Node] $node The Neo4j node for the author/contributor
 	 * @param  [SimpleXMLElement] $fast A FAST node returned from WorldCatIdentities
 	 * @return [Node] The FAST node in the neo4j graph

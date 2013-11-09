@@ -90,8 +90,11 @@ class CatalogueDataSourceExtensionTrove extends DataExtension {
 							}
 							$publisher_parts = explode(':', $publisher);
 							$publisher = trim(implode(' ', array_reverse($publisher_parts)));
-							// todo: Add to timeline
-							// Debug::dump("Published by $publisher in $issued.");
+							
+							// Add a publishing date to the timeline.
+							$timelineKey = 'version-published:' . $version->id;
+							$time = mktime(0,0,0,1,1,$issued);
+							$this->owner->addTimelineEvent($timelineKey, $time, "Published by $publisher in $issued.");
 						}
 					}
 				}
