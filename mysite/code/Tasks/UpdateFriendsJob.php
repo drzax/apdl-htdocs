@@ -7,25 +7,22 @@ use Everyman\Neo4j\Relationship;
 
 /**
  * The UpdateItem job looks for items in the neo4j database that haven't been updated recently
- * and updates them.
+ * and updates friends.
  */
-class UpdateItemJob extends AbstractQueuedJob implements QueuedJob {
+class UpdateFriendsJob extends AbstractQueuedJob implements QueuedJob {
 
 	private static $updateInterval = 1;
-	private static $nodeLimit = 10;
+	private static $nodeLimit = 100;
 
 	public function getTitle() {
-		return "Update items in the collection from appropriate data sources";
+		return "Update an item's friends";
 	}
 
 	public function setup() {
 
 		$query = CatalogueItem::get()
-			->filter(array(
-				'NextUpdate:LessThan' => time()
-			))
 			->limit(self::$nodeLimit)
-			->sort('NextUpdate', 'ASC');
+			->sort('FriendsUpdated', 'ASC');
 
 		$remaining = $query
 			->map('ID', 'ID')
@@ -47,17 +44,18 @@ class UpdateItemJob extends AbstractQueuedJob implements QueuedJob {
 			$this->isComplete = true;
 			return;
 		}
-
+		UpdateLog::log("Current step before: '{$this->currentStep}'", UpdateLog::NOTICE);
 		$this->currentStep++;
+		UpdateLog::log("Current step after: '{$this->currentStep}'", UpdateLog::NOTICE);
 
 		// lets process our first item - note that we take it off the list of things left to do
 		$item = CatalogueItem::get()->byID(array_shift($remaining));
 		
 		// Get the node data
-		$item->updateCatalogueData();
-		$this->addMessage("Catalogue data updated for: {$item->NodeId}: {$item->Title} by {$item->Author}");
+		$item->updateFriends();
+		$this->addMessage("Friends updated for: {$item->NodeId}: {$item->Title} by {$item->Author}");
 
-		// and now we store the new list of remaining children
+		// And now we store the new list of remaining children
 		$this->remaining = $remaining;
 
 		if (!count($remaining)) {

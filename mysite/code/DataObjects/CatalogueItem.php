@@ -20,6 +20,7 @@ class CatalogueItem extends DataObject {
 		'BIB' => 'Int',
 		'NodeId' => 'Int',
 		'NextUpdate' => 'Int',
+		'FriendsUpdated' => 'Int',
 		'Title' => 'Varchar(300)',
 		'Author' => 'Varchar(300)',
 		'ISBN' => 'Varchar(30)',
@@ -31,7 +32,7 @@ class CatalogueItem extends DataObject {
 	
 	private static $default_sort = 'BIB';
 	
-	private static $summary_fields = array('BIB','NodeId','Title','Author');
+	private static $summary_fields = array('ID', 'BIB','NodeId','Title','Author');	
 
 	private $indexedProperties = array(
 		'title',
@@ -139,12 +140,16 @@ class CatalogueItem extends DataObject {
 	 */
 	public function updateCatalogueData() {
 
+		$this->NextUpdate = 0;
+
 		$this->extend('onUpdateCatalogueData');
 
 		// Save the update time on the node
 		$time = time();
 		$this->setNodeProperty('updated', $time);
 		$this->write();
+
+		return "Catalogue data updated for: {$this->NodeId}: {$this->Title} by {$this->Author}\n";
 	}
 
 	/**
@@ -247,7 +252,7 @@ class CatalogueItem extends DataObject {
 	 */
 	public function setNextUpdateTime($time) {
 		$requested = time() + $time;
-		if ($this->NextUpdate === 0 || $this->NextUpdate < $requested) {
+		if ($this->NextUpdate === 0 || $this->NextUpdate > $requested) {
 			$this->NextUpdate = $requested;
 		}
 	}
@@ -328,15 +333,42 @@ class CatalogueItem extends DataObject {
 
 	public function updateFriends() {
 
+		$existingRelationships = $this->getNode()->getRelationships(array('LIKES'), Relationship::DirectionOut);
+		
+		$currentFriends = $this->findFriends();
+		
+		$neo = Neo4jConnection::get();
+
+		foreach ($currentFriends as $friend) {
+
+			$likes = $neo->getNode($friend['NodeId']);
+			$relationship = false;
+
+			// Check if there is an existing like
+			foreach ($existingRelationships as $rel) {
+				$liked = $rel->getEndNode();
+				if ($liked->getId() == $friend['NodeId']) {
+					$relationship = $rel;
+				}
 			}
 
+			// Create a relationship
+			if ($relationship === false) {
+				$relationship = $this->getNode()->relateTo($likes, 'LIKES');
+			}
+
+			$relationship->setProperty('strength', $friend['Average']);
+			$relationship->save();
+		}
+
+		$this->FriendsUpdated = time();
+		$this->write();
+
+		return "Friends updated for: {$this->NodeId}: {$this->Title} by {$this->Author}\n";
+
+	}
+
 	public function findFriends() {
-
-		$existingRelationships = $this->getNode()->getRelationships(array('LIKES'), Relationship::DirectionOut);
-		// foreach ($existing as $rel) {
-		// 	$rel->delete();
-		// }
-
 		
 		$potentialFriends = $this->findPotentialFriends();
 		$actualFriends = array();
@@ -354,11 +386,7 @@ class CatalogueItem extends DataObject {
 			}
 		}
 
-		debug::dump("{$this->NodeId}: {$this->Title} by {$this->Author}");
-		debug::dump(count($actualFriends));
-		debug::dump($actualFriends);
-		debug::dump($potentialFriends);
-
+		return $actualFriends;
 	}
 
 	/**
