@@ -487,7 +487,7 @@ class CatalogueItem extends DataObject {
 				}
 			}
 
-			if ($relCount >= count($relationshipWeightings)/2) {
+			if ($relCount >= count($relationshipWeightings)/3) {
 				$finalList[]=array(
 					'NodeId' => $id,
 					'Relationships' => $friend,
