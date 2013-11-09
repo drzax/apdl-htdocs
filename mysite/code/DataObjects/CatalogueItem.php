@@ -334,6 +334,7 @@ class CatalogueItem extends DataObject {
 	public function updateFriends() {
 
 		$existingRelationships = $this->getNode()->getRelationships(array('LIKES'), Relationship::DirectionOut);
+		$remaining = array();
 		
 		$currentFriends = $this->findFriends();
 		
@@ -345,9 +346,10 @@ class CatalogueItem extends DataObject {
 			$relationship = false;
 
 			// Check if there is an existing like
-			foreach ($existingRelationships as $rel) {
+			foreach ($existingRelationships as $key => $rel) {
 				$liked = $rel->getEndNode();
 				if ($liked->getId() == $friend['NodeId']) {
+					$remaining[] = $key;
 					$relationship = $rel;
 				}
 			}
@@ -359,6 +361,13 @@ class CatalogueItem extends DataObject {
 
 			$relationship->setProperty('strength', $friend['Average']);
 			$relationship->save();
+		}
+
+		// Remove old relationships
+		foreach ($existingRelationships as $key => $rel) {
+			if (!in_array($key, $remaining)) {
+				$rel->delete();
+			}
 		}
 
 		$this->FriendsUpdated = time();
