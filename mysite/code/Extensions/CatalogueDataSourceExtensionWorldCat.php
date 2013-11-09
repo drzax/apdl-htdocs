@@ -33,6 +33,12 @@ class CatalogueDataSourceExtensionWorldCat extends DataExtension {
 
 			$record = $wci->getRecord($lccn);
 
+			// Associate this contributor node with FAST heading nodes
+			foreach ($record->nameInfo->fastHeadings->fast as $fast) {
+				$this->associateFastHeading($contributor->getEndNode(), $fast);
+			}
+
+			// Associate this contributor with related contributors (where they have lccn numbers)
 			if (isset($record->associatedNames->name)) {
 				foreach ($record->associatedNames->name as $name) {
 					$norm = (string) $name->normName;
@@ -49,6 +55,37 @@ class CatalogueDataSourceExtensionWorldCat extends DataExtension {
 
 		// Set next update time for catalogue item
 		$this->owner->setNextUpdateTime(self::$updateInterval);
+	}
+
+	private function associateFastHeading($node, $fast) {
+		$newNode = false;
+
+		// Get the index
+		$index = Neo4jConnection::getIndex('fast');
+
+		$subject = (string) $fast;
+		$norm = (string) $fast->attributes()->norm;
+		
+		$fastNode = $index->findOne('norm', $norm);
+
+		if (!$fastNode) {
+			$fastNode = Neo4jConnection::get()->makeNode();
+			$fastNode->save();
+			$index->add($fastNode, 'norm', $norm);
+			$newNode = true;
+		}
+
+		$fastNode
+			->setProperty('norm', $norm)
+			->setProperty('subject', $subject)
+			->save();
+
+		// Create relationship (if it doesn't already exist)
+		if ($newNode || !Neo4jConnection::relationshipExists($node, 'ASSOCIATED_WITH_SUBJECT', $fastNode)) {
+			$node->relateTo($fastNode, 'ASSOCIATED_WITH_SUBJECT')->save();
+		}
+		// Debug::dump($)
+		return $fastNode;
 	}
 
 	private function associateName($node, $lccn, $name) {
