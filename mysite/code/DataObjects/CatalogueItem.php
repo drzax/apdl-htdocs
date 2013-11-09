@@ -176,7 +176,7 @@ class CatalogueItem extends DataObject {
 
 	}
 
-	public function setItemContributor($lccn) {
+	public function setItemContributor($lccn, $name) {
 
 		$newNode = false;
 
@@ -194,6 +194,7 @@ class CatalogueItem extends DataObject {
 
 		$contributorNode
 			->setProperty('lccn', $lccn)
+			->setProperty('name', $name)
 			->save();
 
 		// Create relationship (if it doesn't already exist)

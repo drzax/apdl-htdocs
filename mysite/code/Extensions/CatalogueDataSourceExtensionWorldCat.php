@@ -35,9 +35,10 @@ class CatalogueDataSourceExtensionWorldCat extends DataExtension {
 
 			if (isset($record->associatedNames->name)) {
 				foreach ($record->associatedNames->name as $name) {
-					$norm = (string)$name->normName;
+					$norm = (string) $name->normName;
+					$raw = (string) $name->rawName->suba;
 					if (substr($norm, 0, 5) === 'lccn-') {
-						$this->associateName($contributor->getEndNode(), $norm);
+						$this->associateName($contributor->getEndNode(), $norm, $raw);
 					}
 				}
 			}
@@ -50,7 +51,7 @@ class CatalogueDataSourceExtensionWorldCat extends DataExtension {
 		$this->owner->setNextUpdateTime(self::$updateInterval);
 	}
 
-	private function associateName($node, $lccn) {
+	private function associateName($node, $lccn, $name) {
 
 		$newNode = false;
 
@@ -68,12 +69,15 @@ class CatalogueDataSourceExtensionWorldCat extends DataExtension {
 
 		$contributorNode
 			->setProperty('lccn', $lccn)
+			->setProperty('name', $name)
 			->save();
 
 		// Create relationship (if it doesn't already exist)
 		if ($newNode || !Neo4jConnection::relationshipExists($node, 'ASSOCIATED_WITH', $contributorNode)) {
 			$node->relateTo($contributorNode, 'ASSOCIATED_WITH')->save();
 		}
+
+		return $contributorNode;
 	}
 
 

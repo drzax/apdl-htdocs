@@ -107,8 +107,12 @@ class CatalogueDataSourceExtensionTrove extends DataExtension {
 				foreach ($record->work->contributor as $contributor) {
 					$contributorRecord = $wci->getRecordByName($contributor);
 					
-					if ($contributorRecord && isset($contributorRecord->pnkey)) {
-						$this->owner->setItemContributor((string)$contributorRecord->pnkey);
+					if (
+						$contributorRecord && 
+						isset($contributorRecord->pnkey) &&
+						isset($contributorRecord->nameInfo->rawName->suba)
+					) {
+						$this->owner->setItemContributor((string)$contributorRecord->pnkey, (string)$contributorRecord->nameInfo->rawName->suba);
 					}
 				}
 			}
