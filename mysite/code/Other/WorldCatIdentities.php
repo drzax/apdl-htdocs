@@ -10,6 +10,7 @@ class WorldCatIdentities {
 	 */
 	public function getRecordByName($name) {
 		$lccn = $this->nameFinder($name);
+		if (!$lccn) return null;
 		return $this->getRecord($lccn);
 	}
 
