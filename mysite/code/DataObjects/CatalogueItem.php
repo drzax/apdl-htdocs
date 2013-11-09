@@ -422,7 +422,8 @@ class CatalogueItem extends DataObject {
 			'HAS_TAG' => 1,
 			'CREATED_BY' => 1.8,
 			'ASSOCIATED_AUTHORS' => 1.5,
-			'ASSOCIATED_AUTHOR_SUBJECTS' => .6
+			'ASSOCIATED_AUTHOR_SUBJECTS' => .6,
+			'ASSOCIATED_AUTHOR_LANGUAGES' => .4
 		);
 
 		foreach (array('HELD_BY','HAS_TAG','CREATED_BY') as $relationshipType) {
@@ -557,8 +558,6 @@ class CatalogueItem extends DataObject {
 				->save();
 		}
 
-		// Debug::dump($latestEventRel);
-
 		$queryTemplate = "START item=node({id}) 
 			MATCH item-[:NEXT*0..]->before, // before could be same as item
 			after-[:NEXT*0..]->item, // after could be same as item
@@ -574,7 +573,6 @@ class CatalogueItem extends DataObject {
 
 		$query = new Query($neo, $queryTemplate, $queryData);
 		$results = $query->getResultSet();
-		Debug::dump($results[0]);
 		
 		$results[0]['old']->delete();
 		$results[0]['before']->relateTo($event, 'NEXT')->save();

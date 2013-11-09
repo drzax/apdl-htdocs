@@ -38,6 +38,11 @@ class CatalogueDataSourceExtensionWorldCat extends DataExtension {
 				$this->associateFastHeading($contributor->getEndNode(), $fast);
 			}
 
+			// Associate this contributor node with FAST heading nodes
+			foreach ($record->nameInfo->languages->lang as $lang) {
+				$this->associateLanguage($contributor->getEndNode(), (string) $lang->attributes()->code);
+			}
+
 			// Associate this contributor with related contributors (where they have lccn numbers)
 			if (isset($record->associatedNames->name)) {
 				foreach ($record->associatedNames->name as $name) {
@@ -57,6 +62,47 @@ class CatalogueDataSourceExtensionWorldCat extends DataExtension {
 		$this->owner->setNextUpdateTime(self::$updateInterval);
 	}
 
+	/**
+	 * Associate this author with a language
+	 *
+	 * @param  [Node] $node The author node
+	 * @param  [String] $lang The language code
+	 * @return [Node] The language node
+	 */
+	private function associateLanguage($node, $lang) {
+		$newNode = false;
+
+		// Get the index
+		$index = Neo4jConnection::getIndex('languages');
+
+		$langNode = $index->findOne('code', $lang);
+
+		if (!$langNode) {
+			$langNode = Neo4jConnection::get()->makeNode();
+			$langNode->save();
+			$index->add($langNode, 'code', $lang);
+			$newNode = true;
+		}
+
+		$langNode
+			->setProperty('code', $lang)
+			->save();
+
+		// Create relationship (if it doesn't already exist)
+		if ($newNode || !Neo4jConnection::relationshipExists($node, 'ASSOCIATED_WITH_LANG', $langNode)) {
+			$node->relateTo($langNode, 'ASSOCIATED_WITH_LANG')->save();
+		}
+		// Debug::dump($)
+		return $langNode;
+	}
+
+	/**
+	 * Associate an author node with a 'FAST' heading.
+	 *
+	 * @param  [Node] $node The Neo4j node for the author/contributor
+	 * @param  [SimpleXMLElement] $fast A FAST node returned from WorldCatIdentities
+	 * @return [Node] The FAST node in the neo4j graph
+	 */
 	private function associateFastHeading($node, $fast) {
 		$newNode = false;
 
