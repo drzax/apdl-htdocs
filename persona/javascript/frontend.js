@@ -1,5 +1,8 @@
 (function($, undefined){
 
+	window.personaLoggedInUser = "$MemberEmail";
+	if (!window.personaLoggedInUser) window.personaLoggedInUser = null;
+
 	// Listen on login buttons
 	$(document).on('click', '.persona-button.login', function(){
 		navigator.id.request();
@@ -13,6 +16,7 @@
 	});
 
 	navigator.id.watch({
+		loggedInUser: window.personaLoggedInUser,
 		onlogin: function(assertion) {
 			// A user has logged in! Here you need to:
 			// 1. Send the assertion to your backend for verification and to create a session.
@@ -22,7 +26,9 @@
 				url: '/persona/verify', // This is a URL on your website.
 				data: {assertion: assertion},
 				success: function(res, status, xhr) { 
-					window.location.reload(); 
+					if (window.personaLoggedInUser !== res.email) {
+						window.location.reload();
+					}
 				},
 				error: function(xhr, status, err) {
 					navigator.id.logout();
@@ -40,7 +46,9 @@
 				type: 'POST',
 				url: '/persona/logout', // This is a URL on your website.
 				success: function(res, status, xhr) { 
-					window.location.reload(); 
+					if (window.personaLoggedInUser !== null) {
+						window.location.reload();
+					}
 				},
 				error: function(xhr, status, err) { 
 					alert("Logout failure: " + err); 

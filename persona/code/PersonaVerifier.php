@@ -7,10 +7,6 @@ class PersonaVerifier extends Controller {
 		'logout'
 	);
 
-	public function index($request) {
-		
-	}
-
 	public function logout($request) {
 		$member = Member::currentUser();
 		if ($member) $member->logOut();
