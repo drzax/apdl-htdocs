@@ -17,7 +17,8 @@ module.exports = function(grunt) {
 					'javascript/require.js': ['src/javascript/require-config.js', 'src/javascript/lib/require/require.js'],
 					'javascript/jquery.js': ['src/javascript/lib/jquery/jquery-2.0.3.js'],
 					'javascript/jquery.autocomplete.js': ['src/javascript/lib/jquery-autocomplete/dist/jquery.autocomplete.js'],
-					'javascript/d3.js': ['src/javascript/lib/d3/d3.v3/d3.v3.js']
+					'javascript/d3.js': ['src/javascript/lib/d3/d3.v3/d3.v3.js'],
+					'javascript/svg-icons.js': ['src/javascript/lib/snap/dist/snap.svg.js','src/javascript/lib/svgicons.js']
 				}
 			},
 			project: {
@@ -28,7 +29,8 @@ module.exports = function(grunt) {
 					beautify: true
 				},
 				files: {
-					'javascript/main.js': ['src/javascript/main.js']
+					'javascript/main.js': ['src/javascript/main.js'],
+					'javascript/svgicons-config.js': ['src/javascript/svgicons-config.js']
 				}
 			}
 		},

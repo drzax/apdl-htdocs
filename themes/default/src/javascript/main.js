@@ -1,26 +1,54 @@
 ;(function(window, undefined){
 
-	var hasLocalStorage;
+	var hasLocalStorage, displayOptions;
 
 	hasLocalStorage = !!window.sessionStorage;
 
 	// Menu
-	require(['jquery'], function($) {
-		var $container, $button;
+	require(['jquery', 'svg-icons', 'svgicons-config'], function($, b) {
+		var $container, $button, icon;
+
 
 		$button = $('#nav-trigger');
 		$container = $('body');
 		$pusher = $('#pusher');
 
-		$button.on('click', function(){
+		icon = new svgIcon( $button.get(0), svgIconConfig, { easing : mina.elastic, speed: 600 } );
 
-			$container.addClass('nav-open'); 
-			$pusher.one('click', function(){
-				$container.removeClass('nav-open');
-				return false;
+		$button.on('click', function(){
+			$container.toggleClass('nav-open'); 
+			return false;
+		});
+	});
+
+	// Options
+	require(['jquery'], function(){
+		var $optionFields;
+
+		displayOptions = [];
+		$optionFields = $('input.opt');
+
+		$optionFields.each(function(){
+			var $opt;
+
+			$opt = $(this);
+
+			$opt.on('change', function(){
+				displayOptions[$opt.attr('id')] = $opt.val();
+				if (hasLocalStorage) {
+					sessionStorage[$opt.attr('id')] = $opt.val();
+				}
 			});
 
-			return false;
+			// If the option is in the local storage restore it
+			if (hasLocalStorage && sessionStorage[$opt.attr('id')]) {
+				$opt.val(sessionStorage[$opt.attr('id')]);
+			} else {
+				$opt.val($opt.data('default'));
+			}
+
+			displayOptions[$opt.attr('id')] = $opt.val();
+
 		});
 	});
 
@@ -111,35 +139,46 @@
 			height, 	// The height of the graph SVG element
 			force, 		// The force directed layout
 			container,	// The container to append the SVG.
+			dataCache, 	// Local cache of data
 			svg, 		// The SVG element which contains the graph
 			nodes, 		// An array of all nodes in the graph.
 			links, 		// An array of all links between nodes in the graph
 			node, 		// D3's collection of all nodes
 			link,		// D3's collection of all links
-			clicked, 	// Index of the most recently clicked node
+			current, 	// The most recently clicked node
+			expand,		// Selection of the expand button
+			bookmark,	// Selection of the bookmark button
 			drag, 		// Force drag handler
 			title; 		// The page title
 
 		// Get the main container element
 		container = d3.select('#graph');
-		if (container.length < 1) return;
+		
+		// Don't do anything else if the graph container isn't here. Wrong page.
+		if (!container[0][0]) return;
 
 		// Initialise width and height
 		width = window.innerWidth;
 		height = window.innerHeight;
 
+		// Initialise the data cache
+		dataCache = [];
+
 		// Setup the node/link data arrays
 		nodes = [];
 		links = [];
-
+		
 		// Setup a force directed layout
 		force = d3.layout.force()
 			.nodes(nodes)
 			.links(links)
-			.friction(.2)
-			.charge(-1000)
+			.friction(.4)
+			.charge(function(d){
+				return -1500;
+				return (d.index === current.index) ? -100 : -4000;
+			})
 			.linkDistance(function(d){
-				return 100*(-d.value+1.5);
+				return 100*(1.5-d.value);
 			})
 			.size([width, height])
 			.on('tick', tick);
@@ -148,6 +187,7 @@
 			.on('drag', function(d){
 				// Leave nodes where they're put.
 				d.fixed = true;
+				d3.select(this).classed("fixed", true);
 			});
 
 		// Setup the SVG element for the graph.
@@ -159,22 +199,162 @@
 		link = svg.selectAll('.link');
 		node = svg.selectAll('.node');
 
-		title = d3.select('div.title');
+		// The item title
+		title = d3.select('.item-title');
 
 		// Setup the size
 		d3.select(window).on("resize", resize);
 		resize();
-		
+
+		bookmark = d3.select('#bookmark-this').on('click', bookmarkCurrentNode);
+		expand = d3.select('#expand-this').on('click', expandOrContract);
 
 		// Start the party
-		load(container.attr('data-bib'));
+		load(container.attr('data-bib'), function(err, item){
+			addLikedNodes(err, item);
+			selectNode(err, item);
+		});
 
+		// Load data for an item based on a BIB and call a callback
+		function load(bib, callback) {
+			if (dataCache[bib]) {
+				callback(null, dataCache[bib]);
+			} else {
+				d3.json('/api/item/'+bib, callback);
+			}
+		}
+
+		// Select a node
+		function selectNode(err, item) {
+			var updates, updatesEntering, nId;
+
+			nId = makeOrFindNode(item);
+
+			current = nodes[nId];
+
+			// Change the state of the expand toggle button
+			if (current.expanded) {
+				expand.classed('collapse', true).text('collapse');
+			} else {
+				expand.classed('collapse', false).text('expand');
+			}
+			
+			d3.select('.node.current').classed('current', false);
+			d3.select('#node-'+current.bib).classed('current', true);
+
+			// Populate the info panel with the selected node's details
+			// console.log(d);
+			updates = d3.select('#timeline').selectAll('.update').data(current.timeline);
+
+			// New update in the timeline
+			updates.enter()
+				.append('div')
+				.attr('class', 'update');
+
+			// Update new and existing update containers with the data
+			updates.html(function(d){
+				// todo: Change this to text.
+				return '<p>'+d.title+'</p>';
+			});
+			
+			// Remove superfluous updates
+			updates.exit().remove(); 
+
+			// Set the title text
+			title.text(current.title);
+		}
+
+		// What to do with a click on a node
+		function nodeClick(d){
+
+			// Ignore the click generated from a drag event.
+			// The force.drag listener prevents default so we chan check for that.
+			if (d3.event.defaultPrevented) return; 
+
+			// If it's a fixed element just unfix it
+			if (d.fixed) {
+				d.fixed = false;
+				d3.select(this).classed("fixed", false);
+				return;
+			}
+
+			// Otherwise, it's a click baby!
+			
+			// Do this before as well so the user has some feedback while loading.
+			d3.select('.node.current').classed('current', false);
+			d3.select('#node-'+d.bib).classed('current', true);
+
+			// load
+			load(d.bib, selectNode);
+		}
+
+		// Resize the window and the graph resizes too!
 		function resize() {
 			width = window.innerWidth;
 			height = window.innerHeight;
 			container.attr("width", width).attr("height", height);
 			svg.attr("width", width).attr("height", height);
 			force.size([width, height]).resume();
+		}
+
+		// Send a bookmark ajax request for the current node
+		function bookmarkCurrentNode() {
+			d3.event.preventDefault();
+			d3.json('/api/bookmark/'+current.bib, function(err, result){
+				console.log(result);
+			});
+		}
+
+		function expandOrContract() {
+			if (current.expanded) {
+				removeLikedNodes(current);
+			} else {
+				load(current.bib, addLikedNodes);
+			}
+		}
+
+		function removeLikedNodes(n) {
+			var nodesToRemove, linksToRemove;
+
+			nodesToKeep = [n];
+			linksToKeep = [];
+
+			links.forEach(function(link) {
+				if (link.source.bib != n.bib) {
+					linksToKeep.push(link);
+				}
+			});
+
+			// console.log(links);
+			// console.log(linksToKeep);
+
+			nodes.forEach(function(node) {
+				linksToKeep.forEach(function(link){
+					if (node.bib == link.source.bib || node.bib == link.target.bib) {
+						nodesToKeep.push(node);
+					}
+				});
+			});
+
+			force.links(linksToKeep);
+			links = force.links();
+			// link.data(links);
+
+			force.nodes(nodesToKeep);
+			nodes = force.nodes();
+
+			force.start();
+			n.expanded = false;
+			// node.data(nodes);
+
+			// console.log(nodes);
+			// console.log(nodesToKeep);
+			// console.log(linksToKeep);
+			// node.data(nodesToKeep);
+			// link.data(linksToKeep);
+
+			redraw();
+			// console.log(nodesToRemove);
 		}
 
 		// A tick function for laying out elements on the force layout's tick event.
@@ -187,7 +367,11 @@
 				.attr("y2", function(d) { return d.target.y; });
 
 			// Move each node to where it should be
-			node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+			node.attr("transform", function(d) {
+				return "translate(" + d.x + "," + d.y + ")"; 
+			});
+
+			if (force.alpha() < 0.1) force.alpha(0.1);
 		}
 
 		// Loop through the collection of nodes and match with the passed data based on the 'bib' property.
@@ -195,58 +379,51 @@
 		// Return the index of the node.
 		function makeOrFindNode(data) {
 			var nodeIndex;
-			// console.log(data);
+			
 			nodes.forEach(function(n, i){
-				// console.log(data.bib, n.bib);
 				if (data.bib == n.bib) {
 					nodeIndex = i;
 				}
 			});
-			// console.log(nodeIndex, nodes);
+			
 			if (nodeIndex === undefined) {
-				// console.log(nodes[clicked]);
-				if (nodes[clicked]) {
-					data.x = nodes[clicked].x;
-					data.y = nodes[clicked].y;
-				}
-				console.log(data.x, data.y);
 				nodes.push(data);
 				nodeIndex = nodes.length-1
 			}
+
+			// Make sure we know this node's friends and timeline
+			if (!nodes[nodeIndex].friends) nodes[nodeIndex].friends = data.friends;
+			if (!nodes[nodeIndex].timeline) nodes[nodeIndex].timeline = data.timeline;
+
 			return nodeIndex;
 		}
 
-		// Load data for an item based on a BIB and add that data to the graph
-		function load(bib) {
-			d3.json('/api/item/'+bib, loadCallback);
-		}
+		
 
 		// Runs once new node data has arrived.
-		function loadCallback(error, item) {
+		function addLikedNodes(error, item) {
 			var sourceIndex;
-
-			// pageContent(item);
-			d3.select('div.title').html(item.title);
 
 			// Find the index of the source node in the nodes array
 			sourceIndex = makeOrFindNode(item);
 			
+			nodes[sourceIndex].expanded = true;
+
 			// Go through each nodes and find appropriate targets for links
 			item.friends.forEach(function(target){
 				targetIndex = makeOrFindNode(target);
 				links.push({source: nodes[sourceIndex], target: nodes[targetIndex], value: target.strength});
 			});
-			
+
 			// Start the force layout.
-			start();
+			redraw();
+
+			// Return the indexx for the source node
+			return sourceIndex;
 		}
 
-		function pageContent(item) {
-			$('div.title').text(item.title);
-		}
-
-		// Start the force directed layout
-		function start() {
+		// redraw the force directed layout
+		function redraw() {
 
 			var nodeEntering, linkEntering;
 
@@ -265,28 +442,25 @@
 
 			// Bind data to the node collection
 			node = svg.selectAll('.node');
-			node = node.data(force.nodes());
+			node = node.data(force.nodes(), function(d){
+				return 'node-'+d.bib;
+			});
 
 			// Define what to do when nodes are added
 			nodeEntering = node.enter().append('g')
 				.attr('class','node')
 				.call(force.drag)
-				.on('click', function(d){
+				.on('click', nodeClick);
 
-					// Ignore the click generated from a drag event.
-					// The force.drag listener prevents default so we chan check for that.
-					if (d3.event.defaultPrevented) return; 
-
-					// If it's a fixed element just unfix it
-					if (d.fixed) {
-						d.fixed = false;
-						return;
-					}
-
-					// Otherwise, it's a click baby!
-  					clicked = d.index;
-  					load(d.bib);
-				});
+			nodeEntering.append('circle')
+				.attr('stroke-width', 0)
+				.attr('fill', 'transparent')
+				.attr('r', 16)
+			.transition()
+				.attr("x", -16)
+				.attr("y", -16)
+				.attr("width", 32)
+				.attr("height", 32);
 
 			nodeEntering.append('image')
 				.attr("xlink:href", function(d){
@@ -304,14 +478,19 @@
 				.attr("y", -16)
 				.attr("width", 32)
 				.attr("height", 32);
-				
 			
+			// Update data for all nodes
+			node.attr('id', function(d){
+				return 'node-'+d.bib
+			});
+
 			// Define what to do when nodes are removed
 			node.exit().remove(); 
 
 			// Start the layout
 			force.start();
 		}
+		
 	});
 	
 }(window));

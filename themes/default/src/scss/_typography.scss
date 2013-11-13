@@ -14,6 +14,7 @@ h1{
     font-size: 38px;
 
     &.site-title {
+        -webkit-transition: all 2s ease-in-out;
         border-bottom: none;
         z-index: 10;
         a {
@@ -21,6 +22,12 @@ h1{
             border-bottom: 1px solid rgba(126, 126, 126, 0.3);
             text-decoration: none;
         }
+    }
+}
+
+.CatalogueItem {
+    .site-title {
+        -webkit-transform: scale(.7);
     }
 }
 

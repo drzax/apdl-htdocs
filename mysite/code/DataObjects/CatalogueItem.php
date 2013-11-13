@@ -695,18 +695,19 @@ class CatalogueItem extends DataObject {
 		$event->relateTo($results[0]['after'], 'NEXT')->save();
 	}
 
+	// Returns the latest ten timeline nodes.
 	public function getTimelineNodes() {
 		
 		$traversal = new Traversal(Neo4jConnection::get());
 		$traversal->addRelationship('NEXT', Relationship::DirectionIn)
 			->setPruneEvaluator(Traversal::PruneNone)
 		    ->setReturnFilter(Traversal::ReturnAll)
-		    ->setMaxDepth(10);
+		    ->setMaxDepth(11);
 
 		$timeline = $traversal->getResults($this->getNode(), Traversal::ReturnTypeNode);
-
-		return $timeline;
+		// array_pop($timeline);
 		
+		return $timeline;
 	}
 
 	/**

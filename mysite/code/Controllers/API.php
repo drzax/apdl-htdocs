@@ -11,8 +11,17 @@ class API extends Controller {
 	private static $allowed_actions = array(
 		'graph',
 		'searchData',
+		'bookmark',
 		'item'
 	);
+
+	public function bookmark($request) {
+
+		$user = Member::currentUser();
+
+		debug::dump($user);
+
+	}
 
 	public function graph($request) {
 
@@ -48,9 +57,13 @@ class API extends Controller {
 
 	public function item($request) {
 
-		$item = CatalogueItem::get()->filter(array(
-			'BIB'=>$this->request->param('ID')
-		))->First();
+		if ($this->request->param('ID')) {
+			$item = CatalogueItem::get()->filter(array(
+				'BIB'=>$this->request->param('ID')
+			))->First();	
+		} else {
+			$item = CatalogueItem::get()->sort('RAND()')->first();
+		}
 		
 		if ( !$item  ) {
 			return $this->httpError('404');
@@ -60,32 +73,40 @@ class API extends Controller {
 
 		$export = (object) $node->getProperties();
 		$export->category = $item->APDLCategory;
-		$export->friends = array();
+		$export->friends = $this->getFriendsForExport($node, true);
 		$export->creators = array();
-
-		$friends = $node->getRelationships(array('LIKES'), Relationship::DirectionOut);
-		if ($friends) foreach ($friends as $friendRel) {
-			$friend = $friendRel->getEndNode();
-			$properties = (object) $friend->getProperties();
-			$properties->category = $this->getNodeCategory($friend);
-			$properties->strength = $friendRel->getProperty('strength');
-			$export->friends[] = $properties;
-		}
-
-		$creators = $node->getRelationships(array('CREATED_BY'), Relationship::DirectionOut);
-		if ($creators) foreach ($creators as $rel) {
-			$creator = $rel->getEndNode();
-			$export->creators[] = $creator->getProperties();
-		}
 
 		$timeline = $item->getTimelineNodes();
 		$export->timeline = array();
 		foreach ($timeline as $event) {
 			$export->timeline[] = $event->getProperties();
 		}
-
 		return Convert::raw2json($export);
 
+	}
+
+	private function getCreatorsForExport($node) {
+		$return = array();
+		$creators = $node->getRelationships(array('CREATED_BY'), Relationship::DirectionOut);
+		if ($creators) foreach ($creators as $rel) {
+			$creator = $rel->getEndNode();
+			$return[] = $creator->getProperties();
+		}
+		return $return;
+	}
+
+	private function getFriendsForExport($node, $recurse = false, $bare = false) {
+		$return = array();
+		$friends = $node->getRelationships(array('LIKES'), Relationship::DirectionOut);
+		if ($friends) foreach ($friends as $friendRel) {
+			$friend = $friendRel->getEndNode();
+			$properties = (object) $friend->getProperties();
+			$properties->category = $this->getNodeCategory($friend);
+			$properties->strength = $friendRel->getProperty('strength');
+			if ($recurse) $properties->friends = $this->getFriendsForExport($friend);
+			$return[] = $properties;
+		}
+		return $return;
 	}
 
 	private function getNodeCategory($node) {

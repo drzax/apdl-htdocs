@@ -29,15 +29,13 @@ body,
 	margin: 0;
 }
 
-#content {
-	overflow-y: scroll;
-	background: #f3efe0;
-}
-
 #content,
 #content-inner {
 	position: relative;
 	text-align: center;
+	overflow-y: scroll;
+	background: #f3efe0;
+	height: 100%;
 }
 
 #container {
@@ -85,6 +83,7 @@ body,
 	background: #48a770;
 	-webkit-transition: all 0.5s;
 	transition: all 0.5s;
+	padding: 1em;
 }
 
 #off-screen-nav::after {
@@ -133,9 +132,8 @@ body,
     top: 15px;
     left: 20px;
     display: block;
-    width: 50px;
-    height: 50px;
     cursor: pointer;
+    z-index: 11;
 }
 
 #graph {
@@ -145,15 +143,54 @@ body,
 	z-index: 0;
 }
 
+#info-panel {
+	background: rgba(0,0,0,.1);
+	border-radius: 1em;
+	position: absolute;
+	top: 30px;
+	right: 30px;
+	bottom: 30px;
+	width: 25%;
+	padding: 1em;
+	overflow: auto;
 
-.node {
-	stroke: #fff;
-	stroke-width: 1.5px;
-	z-index: 2;
+	.item-title {
+		font-style: italic;
+		margin: 0 0 1em 0;
+		font-size: 1em;
+		border-bottom: 1px solid rgba(126,126,126,0.3);
+		padding-bottom: 1em;
+
+	}
 }
+
+.node.fixed circle {
+		stroke: #fff;
+		stroke-width: 5px;
+	}
+
+.node.current circle {
+		stroke: rgba(0,0,0,.6);
+		stroke-width: 5px;
+}
+
 
 .link {
 	stroke: #999;
 	stroke-opacity: .6;
 	z-index: 1;
 }
+
+#node-tools {
+	position: absolute;
+	top: 100px;
+	left: 25px;
+	width: 40px;
+
+	#expand-this {
+		&.inactive {
+			
+		}
+	}
+}
+

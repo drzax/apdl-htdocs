@@ -30,7 +30,7 @@
 
 					$Layout
 
-					<a href="#" id="nav-trigger"><span>Menu</span></a>
+					<span id="nav-trigger" class="si-icon si-icon-hamburger-cross" data-icon-name="hamburgerCross"></span>
 				</div>
 			</div>
 		</div>

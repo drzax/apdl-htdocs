@@ -351,6 +351,7 @@ h1 {
   position: relative;
   font-size: 38px; }
   h1.site-title {
+    -webkit-transition: all 2s ease-in-out;
     border-bottom: none;
     z-index: 10; }
     h1.site-title a {
@@ -365,6 +366,9 @@ h1 {
         color: white; }
       h1.site-title a:active {
         color: white; }
+
+.CatalogueItem .site-title {
+  -webkit-transform: scale(0.7); }
 
 a {
   color: #308fd9; }
@@ -397,14 +401,13 @@ body,
   height: 100%;
   margin: 0; }
 
-#content {
-  overflow-y: scroll;
-  background: #f3efe0; }
-
 #content,
 #content-inner {
   position: relative;
-  text-align: center; }
+  text-align: center;
+  overflow-y: scroll;
+  background: #f3efe0;
+  height: 100%; }
 
 #container {
   position: relative;
@@ -446,7 +449,8 @@ body,
   height: 100%;
   background: #48a770;
   -webkit-transition: all 0.5s;
-  transition: all 0.5s; }
+  transition: all 0.5s;
+  padding: 1em; }
 
 #off-screen-nav::after {
   position: absolute;
@@ -488,9 +492,8 @@ body,
   top: 15px;
   left: 20px;
   display: block;
-  width: 50px;
-  height: 50px;
-  cursor: pointer; }
+  cursor: pointer;
+  z-index: 11; }
 
 #graph {
   position: absolute;
@@ -498,36 +501,41 @@ body,
   left: 0;
   z-index: 0; }
 
-.node {
+#info-panel {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 1em;
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  bottom: 30px;
+  width: 25%;
+  padding: 1em;
+  overflow: auto; }
+  #info-panel .item-title {
+    font-style: italic;
+    margin: 0 0 1em 0;
+    font-size: 1em;
+    border-bottom: 1px solid rgba(126, 126, 126, 0.3);
+    padding-bottom: 1em; }
+
+.node.fixed circle {
   stroke: #fff;
-  stroke-width: 1.5px;
-  z-index: 2; }
+  stroke-width: 5px; }
+
+.node.current circle {
+  stroke: rgba(0, 0, 0, 0.6);
+  stroke-width: 5px; }
 
 .link {
   stroke: #999;
   stroke-opacity: .6;
   z-index: 1; }
 
-/**
-# This styles the site's main sidebar.
+#node-tools {
+  position: absolute;
+  top: 100px;
+  left: 25px;
+  width: 40px; }
 
-```
-<div id="sidebar">
-	<header>
-		<h1>Kindred</h1>
-		<h2>Explore the APDL</h2>
-	</header>
-	<nav>
-		<a href=""></a>
-	</nav>
-	<footer>
-		<% if CurrentFacebookMember %>
-			<p>Hi $CurrentFacebookMember.FirstName</p>
-			<% include ConnectLogout %>
-		<% else %>
-			<% include ConnectLogin %>
-		<% end_if %>
-	</footer>
-</div>
-```
-*/
+fieldset {
+  border: none; }
