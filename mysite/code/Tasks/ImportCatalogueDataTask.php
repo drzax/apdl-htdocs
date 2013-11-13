@@ -52,6 +52,14 @@ class ImportCatalogueDataTask extends BuildTask {
 
 	private function tagData() {
 
+		$primaryCategories = array(
+			'design thinking',
+			'public places',
+			'design for better living',
+			'fashion',
+			'communication design'
+		);
+
 		$items = array();
 
 		$csv = new CSVParser(dirname(__FILE__) . "/../../../assets/data-tags.csv");
@@ -71,16 +79,29 @@ class ImportCatalogueDataTask extends BuildTask {
 				$item->ISBN = $this->sanitiseISBN($row['ISBN']);
 				$item->Author = $this->sanitiseAuthor($row['AUTHOR']);
 
-				$item->write();
-
 				$items[$row['BIB_ID']] = $item;
 
 			}
 
 			// Make tag relationship.
 			if (trim($row['TAGS'])) {
+
+				// Make generic tag relationships
 				$items[$row['BIB_ID']]->setTag(trim($row['TAGS']));
+
+				// Make a primary category relationship if appropriate
+				if (in_array(trim($row['TAGS']), $primaryCategories)) {
+					$items[$row['BIB_ID']]->setAPDLCategory(trim($row['TAGS']));
+				}
+
+				// Make recommendation relationships
+				if (strpos($row['TAGS'], 'recommend') !== false) {
+					$items[$row['BIB_ID']]->setRecommendation(trim($row['TAGS']));
+				}
 			}
+
+			$items[$row['BIB_ID']]->write();
+
 		}
 	}
 

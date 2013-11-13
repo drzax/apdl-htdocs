@@ -7,19 +7,25 @@ module.exports = function(grunt) {
 		uglify: {
 			library: {
 				options: {
-					preserveComments: 'some'
+					preserveComments: 'some',
+					mangle: false,
+					compress: false,
+					beautify: true
 				},
 				files: {
 					'javascript/html5shiv.js': ['src/javascript/lib/html5shiv/src/html5shiv-printshiv.js'],
 					'javascript/require.js': ['src/javascript/require-config.js', 'src/javascript/lib/require/require.js'],
-					'javascript/jquery.js': ['src/javascript/lib/jquery/jquery-1.9.1.js'],
+					'javascript/jquery.js': ['src/javascript/lib/jquery/jquery-2.0.3.js'],
 					'javascript/jquery.autocomplete.js': ['src/javascript/lib/jquery-autocomplete/dist/jquery.autocomplete.js'],
-					'javascript/forms.js': ['src/javascript/lib/jquery-validation/jquery.validate.js']
+					'javascript/d3.js': ['src/javascript/lib/d3/d3.v3/d3.v3.js']
 				}
 			},
 			project: {
 				options: {
-					preserveComments: 'some'
+					preserveComments: 'some',
+					mangle: false,
+					compress: false,
+					beautify: true
 				},
 				files: {
 					'javascript/main.js': ['src/javascript/main.js']

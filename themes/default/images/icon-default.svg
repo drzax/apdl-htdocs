@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   version="1.1"
+   width="103.465"
+   height="103.465"
+   id="svg3700"
+   xml:space="preserve"><metadata
+     id="metadata3706"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
+     id="defs3704"><clipPath
+       id="clipPath3714"><path
+         d="m 0,82.772 82.772,0 L 82.772,0 0,0 0,82.772 z"
+         id="path3716" /></clipPath></defs><g
+     transform="matrix(1.25,0,0,-1.25,0,103.465)"
+     id="g3708"><g
+       transform="matrix(1,0,0,-1,82.4883,41.3873)"
+       id="g3718"
+       style="fill:#4d4d4d"><path
+         d="m 0,0 c 0,-22.701 -18.402,-41.101 -41.103,-41.101 -22.7,0 -41.102,18.4 -41.102,41.101 0,22.7 18.402,41.103 41.102,41.103 C -18.402,41.103 0,22.7 0,0"
+         id="path3720"
+         style="fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none" /></g><text
+       x="26.809032"
+       y="-19.991545"
+       transform="scale(1,-1)"
+       id="text3011"
+       xml:space="preserve"
+       style="font-size:32px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+         x="26.809032"
+         y="-19.991545"
+         id="tspan3013"
+         style="font-size:64px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:PT Sans;-inkscape-font-specification:PT Sans">?</tspan></text>
+</g></svg>

@@ -1,6 +1,9 @@
 ---
-Name: api
+Name: customroutes
+After: framework/routes#coreroutes
 ---
 Director:
   rules:
-    'api/$Action': API
+    'api//': 'API',
+    'cat//$Action/$ID': 'FrontEnd'
+---

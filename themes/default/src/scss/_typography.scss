@@ -15,18 +15,17 @@ h1{
 
     &.site-title {
         border-bottom: none;
-        color: #fff;
-        span {
+        z-index: 10;
+        a {
+            @include link-colors(#fff, #fff, #fff, #fff, #fff);
             border-bottom: 1px solid rgba(126, 126, 126, 0.3);
+            text-decoration: none;
         }
     }
 }
 
 a{
     color: #308fd9;
-    text-decoration: none;
-    text-transform: uppercase;
-    letter-spacing: 2px;
 }
 a:hover{
     color: #87b6da;

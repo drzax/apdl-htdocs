@@ -17,30 +17,18 @@
 	<link rel="stylesheet" href="$ThemeDir/css/style.css">
 	<script data-main="$ThemeDir/javascript/main.js" src="$ThemeDir/javascript/require.js"></script>
 </head>
-<body class="$ClassName<% if Menu(2) %><% else %> no-sidebar<% end_if %>">
+<body class="$ClassName">
 	<div id="container">
 		<nav id="off-screen-nav">
-			
+			<% include SideBar %>
 		</nav>
 
 		<div id="pusher">
 			<div id="content">
 				<div id="content-inner">
-					<h1 class="site-title"><span>Kindred</span></h1>
+					<h1 class="site-title"><a href="$BaseHREF">$SiteConfig.Title</a></h1>
 
-					<div class="introduction">Intro</div>
-
-					<h2>Search</h2>
-
-					<input>
-
-					<h2>Explore</h2>
-
-					<a href="cat/build"><img src="$ThemeDir/images/icon-build.svg"></a>
-					<a href="cat/dress"><img src="$ThemeDir/images/icon-dress.svg"></a>
-					<a href="cat/look"><img src="$ThemeDir/images/icon-look.svg"></a>
-					<a href="cat/smile"><img src="$ThemeDir/images/icon-smile.svg"></a>
-					<a href="cat/think"><img src="$ThemeDir/images/icon-think.svg"></a>
+					$Layout
 
 					<a href="#" id="nav-trigger"><span>Menu</span></a>
 				</div>

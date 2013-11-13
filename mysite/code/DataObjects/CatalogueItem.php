@@ -4,6 +4,7 @@ use Everyman\Neo4j\Client;
 use Everyman\Neo4j\Cypher\Query;
 use Everyman\Neo4j\Index\NodeIndex;
 use Everyman\Neo4j\Relationship;
+use Everyman\Neo4j\Traversal;
 
 /**
  * Provides a Silverstripe DataObject for catalogue items. This provides a link between
@@ -24,7 +25,8 @@ class CatalogueItem extends DataObject {
 		'Title' => 'Varchar(300)',
 		'Author' => 'Varchar(300)',
 		'ISBN' => 'Varchar(30)',
-		'Barcode' => 'Varchar(40)'
+		'Barcode' => 'Varchar(40)',
+		'APDLCategory' => 'Varchar(80)'
 	);
 
 	private static $singlular_name = 'Catalogue Item';
@@ -48,7 +50,7 @@ class CatalogueItem extends DataObject {
 	public function getNode() {
 
 		// If it's null, attempt to get it from Neo4j
-		if (is_null($this->node)) {
+		if (is_null($this->node) && $this->NodeId) {
 			$this->node = Neo4jConnection::get()->getNode((int) $this->NodeId);
 		}
 
@@ -108,11 +110,40 @@ class CatalogueItem extends DataObject {
 	}
 
 	/**
+	 * Make sure the BIB makes it through to the graph db
+	 * @param string $bib The BIB from the SLQ db
+	 */
+	public function setBIB($bib) {
+		$this->setField('BIB', $bib);
+		$this->setNodeProperty('bib', $bib);
+	}
+
+	/**
 	 * Get the author property from neo4j
 	 * @return string The author
 	 */
 	public function getAuthor() {
 		return $this->getNode()->getProperty('author');
+	}
+
+	/**
+	 * Set the primary category in the graph too.
+	 * 
+	 * @param string $category The category string
+	 */
+	public function setAPDLCategory($category) {
+		$this->setField('APDLCategory', $category);
+		
+		$neo = Neo4jConnection::get();
+		$existingRel = $this->getNode()->getFirstRelationship(array('APDL_CATEGORY'), Relationship::DirectionOut);
+		if ($existingRel && $existingRel->getEndNode()->getProperty('name') !== $category) {
+			$existingRel->delete();
+		} else {
+			if (!$existingRel) {
+				$category = Neo4jConnection::getIndex('tags')->findOne('value', $category);
+				if ($category) $this->getNode()->relateTo($category, 'APDL_CATEGORY')->save();
+			}
+		}
 	}
 
 	/**
@@ -181,6 +212,10 @@ class CatalogueItem extends DataObject {
 
 	}
 
+	public function getLink() {
+		return 'view/item/' . $this->BIB;
+	}
+
 	public function setItemContributor($lccn, $name) {
 
 		$newNode = false;
@@ -238,6 +273,37 @@ class CatalogueItem extends DataObject {
 		// Create relationship (if it doesn't already exist)
 		if ($newNode || !Neo4jConnection::relationshipExists($this->getNode(), 'HAS_TAG', $tagNode)) {
 			$this->getNode()->relateTo($tagNode, 'HAS_TAG')->save();
+		}
+	}
+
+	/**
+	 * Set a recommendation relationship with a node.
+	 * 
+	 * @param string $tag The recommendation tag
+	 */
+	public function setRecommendation($tag) {
+
+		$newNode = false;
+
+		// Get the index
+		$index = Neo4jConnection::getIndex('tags');
+		
+		$tagNode = $index->findOne('value', $tag);
+
+		if (!$tagNode) {
+			$tagNode = Neo4jConnection::get()->makeNode();
+			$tagNode->save();
+			$index->add($tagNode, 'value', $tag);
+			$newNode = true;
+		}
+
+		$tagNode
+			->setProperty('name', $tag)
+			->save();
+
+		// Create relationship (if it doesn't already exist)
+		if ($newNode || !Neo4jConnection::relationshipExists($this->getNode(), 'RECOMMENDED_BY', $tagNode)) {
+			$this->getNode()->relateTo($tagNode, 'RECOMMENDED_BY')->save();
 		}
 	}
 
@@ -327,10 +393,6 @@ class CatalogueItem extends DataObject {
 		
 	}
 
-	public function getFriends() {
-
-	}
-
 	public function updateFriends() {
 
 		$output = '';
@@ -339,18 +401,20 @@ class CatalogueItem extends DataObject {
 		$remaining = array();
 		
 		$currentFriends = $this->findFriends();
+		$maxNorm = $currentFriends[0]['norm'];
+		$minNorm = $currentFriends[count($currentFriends)-1]['norm'];
 		
 		$neo = Neo4jConnection::get();
 
 		foreach ($currentFriends as $friend) {
 
-			$likes = $neo->getNode($friend['NodeId']);
+			$likes = $neo->getNode($friend['id']);
 			$relationship = false;
 
 			// Check if there is an existing like
 			foreach ($existingRelationships as $key => $rel) {
 				$liked = $rel->getEndNode();
-				if ($liked->getId() == $friend['NodeId']) {
+				if ($liked->getId() == $friend['id']) {
 					$remaining[] = $key;
 					$relationship = $rel;
 				}
@@ -362,7 +426,7 @@ class CatalogueItem extends DataObject {
 				$output .= "$this->nodeId now likes " . $likes->getId . "\n";
 			}
 
-			$relationship->setProperty('strength', $friend['Average']);
+			$relationship->setProperty('strength', $this->normalise($minNorm, $maxNorm, $friend['norm']));
 			$relationship->save();
 		}
 
@@ -385,118 +449,170 @@ class CatalogueItem extends DataObject {
 		$potentialFriends = $this->findPotentialFriends();
 		$actualFriends = array();
 
-		if (count($potentialFriends)) {
-			$max = $potentialFriends[0]['Average'];
-			$min = $potentialFriends[count($potentialFriends)-1]['Average'];
-
-			foreach ($potentialFriends as $friend) {
-				
-				$ratio = $this->normalise($min, $max, $friend['Average']);
-				if ($ratio > 0.5) {
-					$actualFriends[] = $friend;
-				}
+		$max = null;
+		$min = null;
+		foreach ($potentialFriends as $id => $friend) {
+			$sum = 0;
+			foreach ($friend as $type) {
+				$sum = $sum + $type['weighted'];
 			}
+			$avg = $sum/count($friend);
+
+			if (is_null($max) || $avg > $max) $max = $avg;
+			if (is_null($min) || $avg < $min) $min = $avg;
+			
+			$actualFriends[] = array(
+				'id' => $id, 
+				'sum' => $sum,
+				'avg' => $avg
+			);
 		}
 
-		return $actualFriends;
+		foreach ($actualFriends as &$friend) {
+			$friend['norm'] = $this->normalise($min, $max, $friend['avg']);
+		}
+		
+		usort($actualFriends, array($this, "cmp"));
+		// debug::dump($potentialFriends);
+		$list = array();
+		$min_list = 8;
+		$max_normative_count = 0;
+		foreach ($actualFriends as $friend) {
+			if (
+				(
+					count($list) < $min_list ||
+					$friend['avg'] > .6 ||
+					$friend['norm'] > .85
+				) && (
+					$friend['sum'] > 0 &&
+					$max_normative_count <= $min_list
+				)
+			) {
+				$list[] = $friend;
+				if ($friend['norm'] == 1) $max_normative_count++;
+			} else {
+				break;
+			}
+		}
+		
+
+		return $list;
 	}
+
+	private function cmp($a, $b) {
+			
+		$a = $a['avg'];
+		$b = $b['avg'];
+
+		if ($a == $b) {
+			return 0;
+		}
+		return ($a > $b) ? -1 : 1;
+	}
+
+
 
 	/**
 	 * Return an array of potential friends. 
-	 * Format:
-	 * array(
-	 * 	'NodeId' => 1234,
-	 * 	'Relationships' => array(
-	 * 		'[RelType]' => [RelValue]
-	 * 		...
-	 * 	),
-	 * 	'Average' => 0.037
-	 * );
-	 * @return [type] [description]
+	 * 
+	 * @return array An array of nodes with a collection of signals about the strength of the relationship with that node.
 	 */
 	public function findPotentialFriends() {
 		$potentialFriends = array();
 
 		$relationshipWeightings = array(
 			'HELD_BY' => .5,
-			'HAS_TAG' => 1,
+			'HAS_TAG' => 1.1,
+			'RECOMMENDED_BY' => 2,
 			'CREATED_BY' => 1.8,
 			'ASSOCIATED_AUTHORS' => 1.5,
-			'ASSOCIATED_AUTHOR_SUBJECTS' => .6,
+			'ASSOCIATED_AUTHOR_SUBJECTS' => .7,
 			'ASSOCIATED_AUTHOR_LANGUAGES' => .4
 		);
 
+		// For each of the one degree common relationship types, compile a list of raw values.
 		foreach (array('HELD_BY','HAS_TAG','CREATED_BY') as $relationshipType) {
-			$related = $this->getCommonRelationships($relationshipType);
+
+			$related = $this->getOneDegreeRelationships($relationshipType);
 
 			if (count($related)) {
-				$max = $related[0]['common'];
-				$min = $related[count($related)-1]['common'];
-
 				foreach ($related as $row) {
 
-					if (!isset($potentialFriends[$row['them']->getId()])) {
-						$potentialFriends[$row['them']->getId()] = array();
+					$relatedNodeId = $row['them']->getId();
+
+					// If this node isn't in the list of potentials yet, add it to the array.
+					if (!isset($potentialFriends[$relatedNodeId])) {
+						$potentialFriends[$relatedNodeId] = array(
+							$relationshipType => array()
+						);
 					}
 
-					$ratio = $this->normalise($min, $max, $row['common']);
-					$potentialFriends[$row['them']->getId()][$relationshipType] = $ratio;
+					// Record the raw value
+					$potentialFriends[$relatedNodeId][$relationshipType]['raw'] = $row['common'];
 				}
 			}
 		}
 
-		$associatedAuthors = $this->getAssociatedAuthorRelationships();
-		if (count($associatedAuthors)) {
-			$max = $associatedAuthors[0]['common'];
-			$min = $associatedAuthors[count($associatedAuthors)-1]['common'];
+		// Do the same thing for two degree creator relationships
+		foreach (array('ASSOCIATED_AUTHORS','ASSOCIATED_AUTHOR_SUBJECTS','ASSOCIATED_AUTHOR_LANGUAGES') as $relationshipType) {
+			$related = $this->getTwoDegreeRelationships('CREATED_BY', $relationshipType);
+			if (count($related)) {
+				foreach ($related as $row) {
 
-			foreach ($associatedAuthors as $row) {
-				if (!isset($potentialFriends[$row['them']->getId()])) {
-					$potentialFriends[$row['them']->getId()] = array();
+					$relatedNodeId = $row['them']->getId();
+
+					// If this node isn't in the list of potentials yet, add it to the array.
+					if (!isset($potentialFriends[$relatedNodeId])) {
+						$potentialFriends[$relatedNodeId] = array(
+							$relationshipType => array()
+						);
+					}
+
+					// Record the raw value
+					$potentialFriends[$relatedNodeId][$relationshipType]['raw'] = $row['common'];
 				}
-
-				$ratio = $this->normalise($min, $max, $row['common']);
-				$potentialFriends[$row['them']->getId()]['ASSOCIATED_AUTHORS'] = $ratio;
 			}
 		}
 
-		$associatedAuthorSubjects = $this->getAuthorsWithSameFastHeading();
-		if (count($associatedAuthorSubjects)) {
-			$max = $associatedAuthorSubjects[0]['common'];
-			$min = $associatedAuthorSubjects[count($associatedAuthorSubjects)-1]['common'];
+		$mins = array();
+		$maxs = array();
 
-			foreach ($associatedAuthorSubjects as $row) {
-				if (!isset($potentialFriends[$row['them']->getId()])) {
-					$potentialFriends[$row['them']->getId()] = array();
-				}
-
-				$ratio = $this->normalise($min, $max, $row['common']);
-				$potentialFriends[$row['them']->getId()]['ASSOCIATED_AUTHOR_SUBJECTS'] = $ratio;
-			}
-		}
-
-		$finalList = array();
+		// Go through each potential friend and add some additional data and zero fill missing relationship data.
 		foreach ($potentialFriends as $id => &$friend) {
+
+			// Count of how many relationship types exist with this potential friend.
 			$relCount = 0;
+
+			// Go through and zero fill missing relationship types
 			foreach ($relationshipWeightings as $rel => $weight) {
 				if (isset($friend[$rel]) && $friend[$rel] > 0) {
-					$friend[$rel] = $friend[$rel] * $weight;
 					$relCount++;
 				} else {
-					$friend[$rel] = 0;
+					$friend[$rel] = array('raw'=>0);
 				}
-			}
 
-			if ($relCount >= count($relationshipWeightings)/3) {
-				$finalList[]=array(
-					'NodeId' => $id,
-					'Relationships' => $friend,
-					'Average' => array_sum($friend) / count($friend)
-				);
+				// Record max and min for each so we can normalise later.
+				if (!isset($mins[$rel]) || $mins[$rel] > $friend[$rel]['raw']) {
+					$mins[$rel] = $friend[$rel]['raw'];
+				}
+				if (!isset($maxs[$rel]) || $maxs[$rel] < $friend[$rel]['raw']) {
+					$maxs[$rel] = $friend[$rel]['raw'];
+				}
 			}
 		}
 
-		return $finalList;
+		// Normalise
+		foreach ($potentialFriends as $id => &$friend) {
+			// Go through and zero fill missing relationship types
+			foreach ($relationshipWeightings as $rel => $weight) {
+				$friend[$rel]['norm'] = $this->normalise($mins[$rel], $maxs[$rel], $friend[$rel]['raw']);
+				$friend[$rel]['weighted'] = $friend[$rel]['norm']*$weight;
+			}
+		}
+
+		// debug::dump($potentialFriends);
+
+		return $potentialFriends;
 	}
 
 	public function removeTimelineEvent($key) {
@@ -579,6 +695,20 @@ class CatalogueItem extends DataObject {
 		$event->relateTo($results[0]['after'], 'NEXT')->save();
 	}
 
+	public function getTimelineNodes() {
+		
+		$traversal = new Traversal(Neo4jConnection::get());
+		$traversal->addRelationship('NEXT', Relationship::DirectionIn)
+			->setPruneEvaluator(Traversal::PruneNone)
+		    ->setReturnFilter(Traversal::ReturnAll)
+		    ->setMaxDepth(10);
+
+		$timeline = $traversal->getResults($this->getNode(), Traversal::ReturnTypeNode);
+
+		return $timeline;
+		
+	}
+
 	/**
 	 * Query an index for an existing node. If it exists, return it, otherwise create a new
 	 * node and add it to the index.
@@ -614,53 +744,29 @@ class CatalogueItem extends DataObject {
 	 * @param  string $type The relationship type
 	 * @return ResultSet The query results
 	 */
-	private function getCommonRelationships($type) {
-		$neo =Neo4jConnection::get();
-
+	private function getOneDegreeRelationships($type) {
 		$queryTemplate = "START me=node({id}) 
 			MATCH me-[:$type]->rel<-[:$type]-them 
 			WHERE NOT (me=them) 
-			RETURN them, count(*) AS common 
-			ORDER BY common DESC";
+			RETURN them, count(*) AS common";
 		$queryData = array(
 			'id' => (int) $this->getNode()->getId(),
 			'type' => $type
 		);
-		$query = new Query($neo, $queryTemplate, $queryData);
-		$nodes = $query->getResultSet();
-		return $nodes;
+		$query = new Query(Neo4jConnection::get(), $queryTemplate, $queryData);
+		return $query->getResultSet();
 	}
 
-	private function getAuthorsWithSameFastHeading() {
-		$neo =Neo4jConnection::get();
-
+	private function getTwoDegreeRelationships($type1, $type2) {
 		$queryTemplate = "START me=node({id}) 
-			MATCH me-[:CREATED_BY]->this_creator-[:ASSOCIATED_WITH_SUBJECT]->subject<-[:ASSOCIATED_WITH_SUBJECT]-other_creator<-[:CREATED_BY]-them 
+			MATCH me-[:$type1]->n-[:$type2]->c<-[:$type2]-m<-[:$type1]-them 
 			WHERE NOT (me=them) 
-			RETURN them, count(*) AS common 
-			ORDER BY common DESC";
+			RETURN them, count(*) AS common";
 		$queryData = array(
 			'id' => (int) $this->getNode()->getId()
 		);
-		$query = new Query($neo, $queryTemplate, $queryData);
-		$nodes = $query->getResultSet();
-		return $nodes;
-	}
-
-	private function getAssociatedAuthorRelationships() {
-		$neo =Neo4jConnection::get();
-
-		$queryTemplate = "START me=node({id}) 
-			MATCH me-[:CREATED_BY]->creator<-[:ASSOCIATED_WITH]->other_creator<-[:CREATED_BY]-them 
-			WHERE NOT (me=them) 
-			RETURN them, count(*) AS common 
-			ORDER BY common DESC";
-		$queryData = array(
-			'id' => (int) $this->getNode()->getId()
-		);
-		$query = new Query($neo, $queryTemplate, $queryData);
-		$nodes = $query->getResultSet();
-		return $nodes;
+		$query = new Query(Neo4jConnection::get(), $queryTemplate, $queryData);
+		return $query->getResultSet();
 	}
 
 	/**

@@ -352,15 +352,22 @@ h1 {
   font-size: 38px; }
   h1.site-title {
     border-bottom: none;
-    color: #fff; }
-    h1.site-title span {
-      border-bottom: 1px solid rgba(126, 126, 126, 0.3); }
+    z-index: 10; }
+    h1.site-title a {
+      color: white;
+      border-bottom: 1px solid rgba(126, 126, 126, 0.3);
+      text-decoration: none; }
+      h1.site-title a:visited {
+        color: white; }
+      h1.site-title a:focus {
+        color: white; }
+      h1.site-title a:hover {
+        color: white; }
+      h1.site-title a:active {
+        color: white; }
 
 a {
-  color: #308fd9;
-  text-decoration: none;
-  text-transform: uppercase;
-  letter-spacing: 2px; }
+  color: #308fd9; }
 
 a:hover {
   color: #87b6da; }
@@ -484,6 +491,22 @@ body,
   width: 50px;
   height: 50px;
   cursor: pointer; }
+
+#graph {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0; }
+
+.node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+  z-index: 2; }
+
+.link {
+  stroke: #999;
+  stroke-opacity: .6;
+  z-index: 1; }
 
 /**
 # This styles the site's main sidebar.

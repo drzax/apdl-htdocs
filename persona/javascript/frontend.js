@@ -1,15 +1,15 @@
-(function($, undefined){
+;(function($, undefined){
 
 	window.personaLoggedInUser = "$MemberEmail";
 	if (!window.personaLoggedInUser) window.personaLoggedInUser = null;
 
-	// Listen on login buttons
+	// // Listen on login buttons
 	$(document).on('click', '.persona-button.login', function(){
 		navigator.id.request();
 		return false;
 	});
 
-	// Listen on logout buttons
+	// // Listen on logout buttons
 	$(document).on('click', '.persona-button.logout', function(){
 		navigator.id.logout();
 		return false;

@@ -9,7 +9,7 @@ use Everyman\Neo4j\Relationship;
  */
 class Playground extends Controller {
 
-	private static $allowed_actions = array('AddingEvents', 'UpdateFriendsTest', 'UpdateTaskTests', 'ImportCatalogue', 'WorldCatIdentities', 'FindFriends', 'TroveRecord');
+	private static $allowed_actions = array('AddingEvents', 'UpdateFriendsTest', 'UpdateTaskTests', 'ImportCatalogue', 'WorldCatIdentities', 'FindFriends', 'FindAllFriends', 'TroveRecord');
 
 	private function neo() {
 		if (!$this->neo) {
@@ -78,7 +78,7 @@ class Playground extends Controller {
 		
 		$id = (int) $request->param('ID');
 		if ($id) {
-			$query = CatalogueItem::get()->filter('ID', $id);
+			$query = CatalogueItem::get()->filter('NodeId', $id);
 		} else {
 			$query = CatalogueItem::get()
 				->filter(array(
@@ -123,7 +123,7 @@ class Playground extends Controller {
 		}
 
 		// $item->addTimelineEvent('fake', time(), 'Fake');
-		$item->removeTimelineEvent('fake');
+		$item->removeTimelineEvent('fake2');
 	}
 
 	public function UpdateFriendsTest($request) {
@@ -152,20 +152,49 @@ class Playground extends Controller {
 		echo $item->updateFriends();
 	}
 
+	public function FindAllFriends() {
+		$items = CatalogueItem::get();
+		$dist = array();
+		foreach ($items as $item) {
+			$friends = $item->findFriends();
+			$dist[] = array(
+				'title' => $item->Title,
+				'count' => count($friends)
+			);
+		}
+		function cmp($a, $b) {
+			
+			$a = $a['count'];
+			$b = $b['count'];
+
+			if ($a == $b) {
+				return 0;
+			}
+			return ($a > $b) ? -1 : 1;
+		}
+		usort($dist, 'cmp');
+		Debug::dump($dist);
+	}
+
 	public function FindFriends($request) {
 
 		$id = (int) $request->param('ID');
 		if ($id) {
-			$item = CatalogueItem::get()->filter('NodeId', $id)->first();
+			$item = CatalogueItem::get()->filter('BIB', $id)->first();
 		} else {
 			$item = CatalogueItem::get()->sort('RAND()')->first();
 		}
 		
+		// $potential = $item->findPotentialFriends();
 		$friends = $item->findFriends();
 
-		debug::dump("{$item->NodeId}: {$item->Title} by {$item->Author}");
+		
+
+		debug::dump("{$item->BIB}/{$item->NodeId}: {$item->Title} by {$item->Author}");
 		debug::dump(count($friends));
 		debug::dump($friends);
+		// debug::dump(count($potential));
+		// debug::dump($potential);
 	}
 
 }
