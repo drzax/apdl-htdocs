@@ -16,6 +16,8 @@
 		selected,	// The currently selected node
 		buttons,	// A collection of buttons
 		drag,		// Force drag handler
+		playTimeout,// A timeout to start 'play' mode
+		playInterval, // An interval timer to facilitate 'play' mode
 		title;		// The page title 
 
 	// Get the main container element
@@ -72,8 +74,8 @@
 	// The item title
 	title = d3.select('.item-title');
 
-	// Setup the size
-	d3.select(window).on("resize", resize);
+	// Setup window listeners
+	d3.select(window).on("resize", resize).on('mousemove', function(){stop();});
 	resize();
 
 	buttons = {
@@ -98,7 +100,45 @@
 		expandNode(n);
 		selectNode(n);
 	});
+		stop();
 	}());
+
+	function stop() {
+		clearTimeout(playTimeout);
+		clearInterval(playInterval);
+		playTimeout = setTimeout(function(){
+			play();
+		}, 300000);
+	}
+
+	function play() {
+		clearTimeout(playTimeout);
+		playInterval = setInterval(function(){
+			var node, filtered;
+
+			// If there are too many, only select expanded nodes so we end up collapsing one
+			if (nodes.length > 25) {
+				filtered = nodes.filter(function(n){
+					return (n.expanded);
+				});
+			}
+
+			// Make sure something can be selected.
+			if (!filtered || filtered.length < 1) {
+				filtered = nodes;
+			}
+
+			// Select the node to opperate on.
+			node = filtered[Math.floor(Math.random()*filtered.length)];
+
+			if (node.expanded) {
+				collapseNode(node);
+			} else {
+				expandNode(node);
+			}
+			selectNode(node);
+		}, 5000);
+	}
 
 	// Select a node
 	function selectNode(d) {
