@@ -14,8 +14,7 @@
 		node,		// D3's collection of all nodes
 		link,		// D3's collection of all links
 		selected,	// The currently selected node
-		expand,		// Selection of the expand button
-		bookmark,	// Selection of the bookmark button
+		buttons,	// A collection of buttons
 		drag,		// Force drag handler
 		title;		// The page title 
 
@@ -77,8 +76,17 @@
 	d3.select(window).on("resize", resize);
 	resize();
 
-	bookmark = d3.select('#bookmark-this').on('click', bookmarkCurrentNode);
-	expand = d3.select('#expand-this').on('click', expandOrCollapse);
+	buttons = {
+		expand: {
+			selection: d3.select('#expand-this')
+		},
+		bookmark: {
+			selection: d3.select('#bookmark-this')
+		}
+	};
+
+	buttons.expand.selection.on('click', expandOrCollapse);
+	buttons.expand.snap = new svgIcon( buttons.expand.selection[0][0], svgIconConfig, { easing : mina.elastic, speed: 600 } );
 
 	load(container.attr('data-bib'), function(err, item){
 		var n;
@@ -98,15 +106,27 @@
 
 		// Change the state of the expand toggle button
 		if (selected.expanded) {
-			expand.classed('collapse', true).text('collapse');
+			ensureToggled(buttons.expand.snap);
 		} else {
-			expand.classed('collapse', false).text('expand');
+			ensureUntoggled(buttons.expand.snap);
 		}
 		
 		d3.select('.node.current').classed('current', false);
 		d3.select('#node-'+selected.bib).classed('current', true);
 
 		populateInfoPanel(d);
+	}
+
+	function ensureToggled(svgIcon) {
+		if (!svgIcon.toggled) {
+			svgIcon.toggle(true);
+		}
+	}
+
+	function ensureUntoggled(svgIcon) {
+		if (svgIcon.toggled) {
+			svgIcon.toggle(true);
+		}
 	}
 
 	function populateInfoPanel(d) {
@@ -186,6 +206,7 @@
 	}
 
 	function expandOrCollapse() {
+		d3.event.preventDefault();
 		if (selected.expanded) {
 			collapseNode(selected);
 		} else {

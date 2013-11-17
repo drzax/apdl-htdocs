@@ -5,7 +5,7 @@
 	<div id="timeline"></div>
 </div>
 <div id="node-tools">
-	<a href="#" id="expand-this">expand</a>
+	<a href="#" class="si-icon si-icon-maximize-rotate" data-icon-name="maximizeRotate" id="expand-this"></a>
 	<% if CurrentMember %>
 	<a href="#" id="bookmark-this">bookmark</a>
 	<% end_if %>

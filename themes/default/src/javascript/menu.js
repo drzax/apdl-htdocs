@@ -2,14 +2,16 @@
 
 	var $container, 
 		$button, 
-		icon; 
+		icons;
 
 	// Menu
 	$button = $('#nav-trigger');
+
 	$container = $('body');
 	$pusher = $('#pusher');
+	icons = [];
 
-	icon = new svgIcon( $button.get(0), svgIconConfig, { easing : mina.elastic, speed: 600 } );
+	icons.push(new svgIcon( $button.get(0), svgIconConfig, { easing : mina.elastic, speed: 600 } ));
 
 	$button.on('click', function(){
 		$container.toggleClass('nav-open'); 

@@ -489,8 +489,8 @@ body,
 
 #nav-trigger {
   position: fixed;
-  top: 15px;
-  left: 20px;
+  top: 5px;
+  left: 3px;
   display: block;
   cursor: pointer;
   z-index: 11; }
@@ -520,9 +520,17 @@ body,
 
 #node-tools {
   position: absolute;
-  top: 100px;
-  left: 25px;
-  width: 40px; }
+  top: 0px;
+  left: 0px;
+  bottom: 0;
+  width: 70px;
+  padding-top: 80px;
+  background: rgba(0, 0, 0, 0.1); }
+  #node-tools a {
+    width: 70px;
+    height: 70px; }
+    #node-tools a.unavailable {
+      display: none; }
 
 fieldset {
   border: none; }

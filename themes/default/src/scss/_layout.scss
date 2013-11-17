@@ -166,13 +166,19 @@ body,
 
 #node-tools {
 	position: absolute;
-	top: 100px;
-	left: 25px;
-	width: 40px;
+	top: 0px;
+	left: 0px;
+	bottom: 0;
+	width: 70px;
+	padding-top: 80px;
+	background: rgba(0,0,0,.1);
 
-	#expand-this {
-		&.inactive {
+	a {
+		width:70px;
+		height: 70px;
 			
+		&.unavailable {
+			display: none;
 		}
 	}
 }
