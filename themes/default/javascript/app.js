@@ -353,7 +353,9 @@ var svgIconConfig = {
         node.attr("id", function(d) {
             return "node-" + d.bib;
         });
-        node.exit().remove();
+        node.exit().selectAll("image").transition().attr("x", 0).attr("y", 0).attr("width", 0).attr("height", 0).each("end", function() {
+            d3.select(this.parentNode).remove();
+        });
         force.start();
     }
     function makeOrFindNode(data) {
