@@ -88,12 +88,17 @@
 	buttons.expand.selection.on('click', expandOrCollapse);
 	buttons.expand.snap = new svgIcon( buttons.expand.selection[0][0], svgIconConfig, { easing : mina.elastic, speed: 600 } );
 
-	load(container.attr('data-bib'), function(err, item){
+	// Get started
+	(function(){
+		var match;
+		match = window.location.href.match(/view\/item\/([0-9]+)/);
+		if (match[1]) load(match[1], function(err, item){
 		var n;
 		n = makeOrFindNode(item);
 		expandNode(n);
 		selectNode(n);
 	});
+	}());
 
 	// Select a node
 	function selectNode(d) {
