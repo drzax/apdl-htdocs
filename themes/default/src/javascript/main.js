@@ -14,6 +14,8 @@
 		node,		// D3's collection of all nodes
 		link,		// D3's collection of all links
 		selected,	// The currently selected node
+		nodeDiameter, // The diameter of node images
+		nodeScale,	// Scale to apply for selected node
 		buttons,	// A collection of buttons
 		drag,		// Force drag handler
 		playTimeout,// A timeout to start 'play' mode
@@ -32,6 +34,8 @@
 	// Initialise width and height
 	width = window.innerWidth;
 	height = window.innerHeight;
+	nodeDiameter = 24;
+	nodeScale = 1.5;
 
 	// Initialise the data cache
 	dataCache = [];
@@ -44,7 +48,7 @@
 	force = d3.layout.force()
 		.nodes(nodes)
 		.links(links)
-		.friction(0.4)
+		.friction(0.9)
 		.charge(function(d){
 			return -1500;
 			// return (d.index === current.index) ? -100 : -4000;
@@ -67,6 +71,18 @@
 		.attr("width", width)
 		.attr("height", height);
 
+	// define arrow markers for graph links
+	svg.append('svg:defs').append('svg:marker')
+		.attr('id', 'end-arrow')
+		.attr('viewBox', '0 -5 10 10')
+		.attr('refX', 6)
+		.attr('markerWidth', 3)
+		.attr('markerHeight', 3)
+		.attr('orient', 'auto')
+	.append('svg:path')
+		.attr('d', 'M0,-5L10,0L0,5')
+		.attr('fill', '#f00');
+
 	// Setup d3 collections we need to know about
 	link = svg.selectAll('.link');
 	node = svg.selectAll('.node');
@@ -86,7 +102,7 @@
 			selection: d3.select('#bookmark-this')
 		}
 	};
-
+	
 	buttons.expand.selection.on('click', expandOrCollapse);
 	buttons.expand.snap = new svgIcon( buttons.expand.selection[0][0], svgIconConfig, { easing : mina.elastic, speed: 600 } );
 
@@ -95,11 +111,11 @@
 		var match;
 		match = window.location.href.match(/view\/item\/([0-9]+)/);
 		if (match[1]) load(match[1], function(err, item){
-		var n;
-		n = makeOrFindNode(item);
-		expandNode(n);
-		selectNode(n);
-	});
+			var n;
+			n = makeOrFindNode(item);
+			expandNode(n);
+			selectNode(n);
+		});
 		stop();
 	}());
 
@@ -121,7 +137,7 @@
 				filtered = nodes.filter(function(n){
 					return (n.expanded);
 				});
-			}
+			} 
 
 			// Make sure something can be selected.
 			if (!filtered || filtered.length < 1) {
@@ -148,6 +164,8 @@
 		nodes.forEach(function(n){
 			n.selected = (n==d);
 		});
+
+		force.alpha(0.1);
 
 		// Change the state of the expand toggle button
 		if (selected.expanded) {
@@ -264,7 +282,7 @@
 		var outgoingLinks = linksByNode(n, 'source');
 
 		n.expanded = false;
-		
+
 		outgoingLinks.forEach(function(link){
 			var i, targetNode;
 			for (i=links.length; i--;) {
@@ -315,23 +333,48 @@
 	function tick() {
 
 		var xOffsetPct = 0.15;
+		var nodeDiameter = 50;
 
-		// Move each end of each link to where it should be (i.e. the location of the node it's attached to)
-		link.attr("x1", function(d) { return d.source.x-width*xOffsetPct; })
-			.attr("y1", function(d) { return d.source.y; })
-			.attr("x2", function(d) { return d.target.x-width*xOffsetPct; })
-			.attr("y2", function(d) { return d.target.y; });
+		// draw directed edges with proper padding from node centers
+		link.attr('d', function(d) {
+			var deltaX,
+				deltaY,
+				dist,
+				normX,
+				normY,
+				sourcePadding,
+				targetPadding,
+				sourceX,
+				sourceY,
+				targetX,
+				targetY;
+			
+			deltaX = d.target.x - d.source.x;
+			deltaY = d.target.y - d.source.y;
+			dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+			normX = deltaX / dist;
+			normY = deltaY / dist;
+			sourcePadding = d.source.selected ? nodeDiameter/2*nodeScale : nodeDiameter/2;
+			targetPadding = d.target.selected ? nodeDiameter/2*nodeScale : nodeDiameter/2;
+			sourceX = d.source.x + (sourcePadding * normX)-width*xOffsetPct;
+			sourceY = d.source.y + (sourcePadding * normY);
+			targetX = d.target.x - (targetPadding * normX)-width*xOffsetPct;
+			targetY = d.target.y - (targetPadding * normY);
+
+			return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+		});
+
 
 		// Move each node to where it should be
 		node.attr("transform", function(d) {
 			var transforms = [];
 			transforms.push("translate(" + (d.x-width*xOffsetPct) + "," + d.y + ")");
-			if (d.selected) transforms.push('scale(1.5)');
+			if (d.selected) transforms.push('scale('+nodeScale+')');
 			return transforms.join(' '); 
 		});
 
 		// Keep it ticking.
-		if (force.alpha() < 0.1) force.alpha(0.1);
+		// if (force.tick() < 0.1) force.tick(0.1);
 	}
 
 	// Add liked nodes for an item to the graph display.
@@ -359,25 +402,9 @@
 	// redraw the force directed layout
 	function redraw() {
 
-		var nodeEntering, linkEntering, nodeDiameter;
-
-		// Bind data to the link collection
-		link = svg.selectAll('.link');
-		link = link.data(force.links());
-
-		nodeDiameter = 24;
-
-		// Define what to do when links are added
-		// Save a reference to the entering elements so we can add multiple children
-		linkEntering = link.enter().insert('line', '.node')
-			.attr('class', 'link')
-			.style('stroke-width', '1');
-
-		// Define what to do when links are removed
-		link.exit().remove();
+		var nodeEntering, linkEntering;
 
 		// Bind data to the node collection
-		node = svg.selectAll('.node');
 		node = node.data(force.nodes(), function(d){
 			return 'node-'+d.bib;
 		});
@@ -429,6 +456,18 @@
 			.each('end', function () {
 				d3.select(this.parentNode).remove();
 			});
+
+		// Bind data to the link collection
+		link = link.data(force.links());
+
+		// add new links
+		link.enter().insert('svg:path', '.node')
+			.attr('class', 'link');
+
+		link.style('marker-end', 'url(#end-arrow)');
+
+		// Define what to do when links are removed
+		link.exit().remove();
 
 		// Start the layout
 		force.start();
