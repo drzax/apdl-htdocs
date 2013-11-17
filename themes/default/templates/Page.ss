@@ -15,7 +15,6 @@
 	<link rel="shortcut icon" href="$ThemeDir/images/favicon.ico">
 	<link href='http://fonts.googleapis.com/css?family=Playfair+Display:400,700,900,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" href="$ThemeDir/css/style.css">
-	<script data-main="$ThemeDir/javascript/main.js" src="$ThemeDir/javascript/require.js"></script>
 </head>
 <body class="$ClassName">
 	<div id="container">
@@ -36,5 +35,8 @@
 		</div>
 
 	</div>
+	<script src="$ThemeDir/javascript/lib.js"></script>
+	<script src="https://login.persona.org/include.js"></script>
+	<script src="$ThemeDir/javascript/app.js"></script>
 </body>
 </html>

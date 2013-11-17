@@ -73,7 +73,7 @@ class API extends Controller {
 
 		$export = (object) $node->getProperties();
 		$export->category = $item->APDLCategory;
-		$export->friends = $this->getFriendsForExport($node, true);
+		$export->friends = $this->getFriendsForExport($node, false);
 		$export->creators = array();
 
 		$timeline = $item->getTimelineNodes();

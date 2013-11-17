@@ -164,23 +164,6 @@ body,
 	}
 }
 
-.node.fixed circle {
-		stroke: #fff;
-		stroke-width: 5px;
-	}
-
-.node.current circle {
-		stroke: rgba(0,0,0,.6);
-		stroke-width: 5px;
-}
-
-
-.link {
-	stroke: #999;
-	stroke-opacity: .6;
-	z-index: 1;
-}
-
 #node-tools {
 	position: absolute;
 	top: 100px;

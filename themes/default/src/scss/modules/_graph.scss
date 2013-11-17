@@ -1,0 +1,17 @@
+
+.node {
+
+	@include transition-property(transform);
+	@include transition-duration(3s);
+
+	&.fixed circle {
+		stroke: #fff;
+		stroke-width: 5px;
+	} 
+}
+
+.link {
+	stroke: #999;
+	stroke-opacity: .6;
+	z-index: 1;
+}

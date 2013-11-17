@@ -22,8 +22,6 @@ class FrontEnd extends Controller {
 	 */
 	public function get($request) {
 
-		$id = str_replace('-', ' ', $this->request->param('ID'));
-
 		$primaryCategories = array(
 			'design thinking',
 			'public places',
@@ -32,12 +30,29 @@ class FrontEnd extends Controller {
 			'communication design'
 		);
 
-		$item = CatalogueItem::get()->filter('APDLCategory', $id)->sort('RAND()')->first();
+		// The category requested
+		$category = str_replace('-', ' ', $this->request->param('ID'));
+
+		// Get an item in the collection
+		$item = $this->getRandomItem($category);
+
+		// Something crazy happened. Are there any items at all?
 		if ( !$item  ){
 			return $this->httpError('404');
 		}
-		
+
+		// If there aren't any friends try some more.
+		$attempts = 0;
+		while ( count($item->getNode()->getRelationships(array('LIKES'), Relationship::DirectionOut)) < 2  && $attempts < 5) {
+			$item = $this->getRandomItem($category);
+			$attempts++;
+		}
+
 		return $this->redirect($item->Link);
+	}
+
+	private function getRandomItem($category) {
+		return CatalogueItem::get()->filter('APDLCategory', $category)->sort('RAND()')->first();
 	}
 
 }
