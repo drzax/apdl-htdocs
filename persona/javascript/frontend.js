@@ -1,5 +1,7 @@
 ;(function($, undefined){
 
+	if ( ! navigator.id ) return;
+
 	window.personaLoggedInUser = "$MemberEmail";
 	if (!window.personaLoggedInUser) window.personaLoggedInUser = null;
 
