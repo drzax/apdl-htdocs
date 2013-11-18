@@ -31,7 +31,7 @@ module.exports = function(grunt) {
 				},
 				files: {
 					'javascript/app.js': [
-						'../../persona/javascript/frontend.js',
+						'src/javascript/persona.js',
 						'src/javascript/svgicons-config.js',
 						'src/javascript/menu.js',
 						'src/javascript/search.js',
@@ -66,7 +66,7 @@ module.exports = function(grunt) {
 				tasks: ['jshint:lib', 'uglify:lib']
 			},
 			scriptsProject: {
-			files: ['src/javascript/*.js'],
+				files: ['src/javascript/*.js'],
 				tasks: ['jshint:app', 'uglify:app']
 			},
 			styles: {

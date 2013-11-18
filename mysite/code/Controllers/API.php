@@ -19,8 +19,31 @@ class API extends Controller {
 
 		$user = Member::currentUser();
 
-		debug::dump($user);
+		if (!$user) {
+			return $this->httpError(404);
+		}
 
+		$bib = $request->param('ID');
+
+		$current = $user->getBookmarks();
+		$exists = false;
+		foreach ($current as $bm) {
+			if ($bm->getProperty('bib') == $bib) {
+				$exists = true;
+				break;
+			}
+		}
+
+		if (!$exists) {
+			$user->addBookmark($bib);
+		}
+
+		$bookmarks = array();
+		foreach ($user->getBookmarks() as $mark) {
+			$bookmarks[] = $mark->getProperties();
+		}
+
+		return Convert::raw2json($bookmarks);
 	}
 
 	public function graph($request) {

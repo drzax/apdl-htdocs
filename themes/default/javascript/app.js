@@ -1,4 +1,5 @@
 (function($, undefined) {
+    if (!navigator.id) return;
     window.personaLoggedInUser = "$MemberEmail";
     if (!window.personaLoggedInUser) window.personaLoggedInUser = null;
     $(document).on("click", ".persona-button.login", function() {
@@ -19,12 +20,10 @@
                     assertion: assertion
                 },
                 success: function(res, status, xhr) {
-                    if (window.personaLoggedInUser !== res.email) {
-                        window.location.reload();
-                    }
+                    logIn();
                 },
                 error: function(xhr, status, err) {
-                    navigator.id.logout();
+                    logOut();
                     alert("Login failure: " + err);
                 }
             });
@@ -34,9 +33,8 @@
                 type: "POST",
                 url: "/persona/logout",
                 success: function(res, status, xhr) {
-                    if (window.personaLoggedInUser !== null) {
-                        window.location.reload();
-                    }
+                    window.personaLoggedInUser = null;
+                    logOut();
                 },
                 error: function(xhr, status, err) {
                     alert("Logout failure: " + err);
@@ -44,6 +42,15 @@
             });
         }
     });
+    function logIn() {
+        $("#bookmark-this").show();
+        $(".persona-button").removeClass("login").addClass("logout").find("span").text("Sign out");
+    }
+    function logOut() {
+        $("#bookmark-this").hide();
+        $("#bookmarks").empty();
+        $(".persona-button").removeClass("logout").addClass("login").find("span").text("Sign in with your email");
+    }
 })(jQuery);
 
 var svgIconConfig = {
@@ -78,6 +85,20 @@ var svgIconConfig = {
                 },
                 to: {
                     val: '{"path" : "M 12.972944,12.882035 51.027056,50.936147"}'
+                }
+            }
+        } ]
+    },
+    flag: {
+        url: "themes/default/images/flag.svg",
+        animation: [ {
+            el: "path",
+            animProperties: {
+                from: {
+                    val: '{"path" : "m 11.75,11.75 c 0,0 10.229631,3.237883 20.25,0 10.020369,-3.2378833 20.25,0 20.25,0 l 0,27 c 0,0 -6.573223,-3.833185 -16.007359,0 -9.434136,3.833185 -24.492641,0 -24.492641,0 z"}'
+                },
+                to: {
+                    val: '{"path" : "m 11.75,11.75 c 0,0 8.373476,-4.8054563 17.686738,0 9.313262,4.805456 22.813262,0 22.813262,0 l 0,27 c 0,0 -11.699747,4.363515 -22.724874,0 C 18.5,34.386485 11.75,38.75 11.75,38.75 z"}'
                 }
             }
         } ]
@@ -208,16 +229,18 @@ var svgIconConfig = {
 })(window, jQuery);
 
 (function(window, undefined) {
-    var width, height, force, container, dataCache, hasLocStor, svg, nodes, links, node, link, selected, expand, bookmark, drag, title;
+    var width, height, force, container, dataCache, hasLocStor, svg, nodes, links, node, link, selected, nodeDiameter, nodeScale, buttons, drag, playTimeout, playInterval, title;
     container = d3.select("#graph");
     if (!container[0][0]) return;
     hasLocStor = !!window.sessionStorage;
     width = window.innerWidth;
     height = window.innerHeight;
+    nodeDiameter = 24;
+    nodeScale = 1.5;
     dataCache = [];
     nodes = [];
     links = [];
-    force = d3.layout.force().nodes(nodes).links(links).friction(.4).charge(function(d) {
+    force = d3.layout.force().nodes(nodes).links(links).friction(.9).charge(function(d) {
         return -1500;
     }).linkDistance(function(d) {
         return 100 * (1.5 - d.value);
@@ -227,10 +250,13 @@ var svgIconConfig = {
         d3.select(this).classed("fixed", true);
     });
     svg = container.append("svg").attr("width", width).attr("height", height);
+    svg.append("svg:defs").append("svg:marker").attr("id", "end-arrow").attr("viewBox", "0 -5 10 10").attr("refX", 6).attr("markerWidth", 3).attr("markerHeight", 3).attr("orient", "auto").append("svg:path").attr("d", "M0,-5L10,0L0,5").attr("fill", "#f00");
     link = svg.selectAll(".link");
     node = svg.selectAll(".node");
     title = d3.select(".item-title");
-    d3.select(window).on("resize", resize);
+    d3.select(window).on("resize", resize).on("mousemove", function() {
+        stop();
+    });
     resize();
     buttons = {
         expand: {
@@ -243,19 +269,59 @@ var svgIconConfig = {
     buttons.expand.selection.on("click", expandOrCollapse);
     buttons.expand.snap = new svgIcon(buttons.expand.selection[0][0], svgIconConfig, {
         easing: mina.elastic,
-        speed: 600
+        speed: 800
     });
-        var n;
-        n = makeOrFindNode(item);
-        expandNode(n);
-        selectNode(n);
+    buttons.bookmark.selection.on("click", bookmarkCurrentNode);
+    buttons.bookmark.snap = new svgIcon(buttons.bookmark.selection[0][0], svgIconConfig, {
+        easing: mina.elastic,
+        speed: 800
     });
+    (function() {
+        var match;
+        match = window.location.href.match(/view\/item\/([0-9]+)/);
+        if (match[1]) load(match[1], function(err, item) {
+            var n;
+            n = makeOrFindNode(item);
+            expandNode(n);
+            selectNode(n);
+        });
+        stop();
+    })();
+    function stop() {
+        clearTimeout(playTimeout);
+        clearInterval(playInterval);
+        playTimeout = setTimeout(function() {
+            play();
+        }, 3e5);
+    }
+    function play() {
+        clearTimeout(playTimeout);
+        playInterval = setInterval(function() {
+            var node, filtered;
+            if (nodes.length > 25) {
+                filtered = nodes.filter(function(n) {
+                    return n.expanded;
+                });
+            }
+            if (!filtered || filtered.length < 1) {
+                filtered = nodes;
+            }
+            node = filtered[Math.floor(Math.random() * filtered.length)];
+            if (node.expanded) {
+                collapseNode(node);
+            } else {
+                expandNode(node);
+            }
+            selectNode(node);
+        }, 5e3);
+    }
     function selectNode(d) {
         var updates, updatesEntering, nId;
         selected = d;
         nodes.forEach(function(n) {
             n.selected = n == d;
         });
+        force.alpha(.1);
         if (selected.expanded) {
             ensureToggled(buttons.expand.snap);
         } else {
@@ -305,7 +371,7 @@ var svgIconConfig = {
     }
     function bookmarkCurrentNode() {
         d3.event.preventDefault();
-        d3.json("/api/bookmark/" + current.bib, function(err, result) {
+        d3.json("/api/bookmark/" + selected.bib, function(err, result) {
             var container, bookmarks, enter, exit;
             container = d3.select("#bookmarks").selectAll(".bookmark").data(result);
             container.enter().append("div").attr("class", "bookmark");
@@ -364,22 +430,28 @@ var svgIconConfig = {
     }
     function tick() {
         var xOffsetPct = .15;
-        link.attr("x1", function(d) {
-            return d.source.x - width * xOffsetPct;
-        }).attr("y1", function(d) {
-            return d.source.y;
-        }).attr("x2", function(d) {
-            return d.target.x - width * xOffsetPct;
-        }).attr("y2", function(d) {
-            return d.target.y;
+        var nodeDiameter = 50;
+        link.attr("d", function(d) {
+            var deltaX, deltaY, dist, normX, normY, sourcePadding, targetPadding, sourceX, sourceY, targetX, targetY;
+            deltaX = d.target.x - d.source.x;
+            deltaY = d.target.y - d.source.y;
+            dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            normX = deltaX / dist;
+            normY = deltaY / dist;
+            sourcePadding = d.source.selected ? nodeDiameter / 2 * nodeScale : nodeDiameter / 2;
+            targetPadding = d.target.selected ? nodeDiameter / 2 * nodeScale : nodeDiameter / 2;
+            sourceX = d.source.x + sourcePadding * normX - width * xOffsetPct;
+            sourceY = d.source.y + sourcePadding * normY;
+            targetX = d.target.x - targetPadding * normX - width * xOffsetPct;
+            targetY = d.target.y - targetPadding * normY;
+            return "M" + sourceX + "," + sourceY + "L" + targetX + "," + targetY;
         });
         node.attr("transform", function(d) {
             var transforms = [];
             transforms.push("translate(" + (d.x - width * xOffsetPct) + "," + d.y + ")");
-            if (d.selected) transforms.push("scale(1.5)");
+            if (d.selected) transforms.push("scale(" + nodeScale + ")");
             return transforms.join(" ");
         });
-        if (force.alpha() < .1) force.alpha(.1);
     }
     function expandNode(d) {
         d.expanded = true;
@@ -398,13 +470,7 @@ var svgIconConfig = {
         });
     }
     function redraw() {
-        var nodeEntering, linkEntering, nodeDiameter;
-        link = svg.selectAll(".link");
-        link = link.data(force.links());
-        nodeDiameter = 24;
-        linkEntering = link.enter().insert("line", ".node").attr("class", "link").style("stroke-width", "1");
-        link.exit().remove();
-        node = svg.selectAll(".node");
+        var nodeEntering, linkEntering;
         node = node.data(force.nodes(), function(d) {
             return "node-" + d.bib;
         });
@@ -422,6 +488,10 @@ var svgIconConfig = {
         node.exit().selectAll("image").transition().attr("x", 0).attr("y", 0).attr("width", 0).attr("height", 0).each("end", function() {
             d3.select(this.parentNode).remove();
         });
+        link = link.data(force.links());
+        link.enter().insert("svg:path", ".node").attr("class", "link");
+        link.style("marker-end", "url(#end-arrow)");
+        link.exit().remove();
         force.start();
     }
     function makeOrFindNode(data) {

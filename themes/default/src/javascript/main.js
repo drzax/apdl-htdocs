@@ -104,7 +104,10 @@
 	};
 	
 	buttons.expand.selection.on('click', expandOrCollapse);
-	buttons.expand.snap = new svgIcon( buttons.expand.selection[0][0], svgIconConfig, { easing : mina.elastic, speed: 600 } );
+	buttons.expand.snap = new svgIcon( buttons.expand.selection[0][0], svgIconConfig, { easing : mina.elastic, speed: 800 } );
+
+	buttons.bookmark.selection.on('click', bookmarkCurrentNode);
+	buttons.bookmark.snap = new svgIcon (buttons.bookmark.selection[0][0], svgIconConfig, {easing : mina.elastic, speed: 800 } );
 
 	// Get started
 	(function(){
@@ -249,7 +252,7 @@
 	// Send a bookmark ajax request for the current node
 	function bookmarkCurrentNode() {
 		d3.event.preventDefault();
-		d3.json('/api/bookmark/'+current.bib, function(err, result){
+		d3.json('/api/bookmark/'+selected.bib, function(err, result){
 			var container, bookmarks, enter, exit;
 			container = d3.select('#bookmarks').selectAll('.bookmark').data(result);
 

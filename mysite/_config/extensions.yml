@@ -5,3 +5,6 @@ CatalogueItem:
   extensions:
     - CatalogueDataSourceExtensionTrove
     - CatalogueDataSourceExtensionWorldCat
+Member:
+  extensions:
+    - MemberExtension

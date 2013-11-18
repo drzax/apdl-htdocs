@@ -524,6 +524,7 @@ class CatalogueItem extends DataObject {
 			'HELD_BY' => .5,
 			'HAS_TAG' => 1.1,
 			'RECOMMENDED_BY' => 2,
+			'LIKED_BY_MEMBER' => 1,
 			'CREATED_BY' => 1.8,
 			'ASSOCIATED_AUTHORS' => 1.5,
 			'ASSOCIATED_AUTHOR_SUBJECTS' => .7,
@@ -531,7 +532,7 @@ class CatalogueItem extends DataObject {
 		);
 
 		// For each of the one degree common relationship types, compile a list of raw values.
-		foreach (array('HELD_BY','HAS_TAG','CREATED_BY') as $relationshipType) {
+		foreach (array('HELD_BY','HAS_TAG','CREATED_BY', 'RECOMMENDED_BY', 'LIKED_BY_MEMBER') as $relationshipType) {
 
 			$related = $this->getOneDegreeRelationships($relationshipType);
 
@@ -705,7 +706,7 @@ class CatalogueItem extends DataObject {
 		    ->setMaxDepth(11);
 
 		$timeline = $traversal->getResults($this->getNode(), Traversal::ReturnTypeNode);
-		// array_pop($timeline);
+		array_pop($timeline);
 		
 		return $timeline;
 	}
