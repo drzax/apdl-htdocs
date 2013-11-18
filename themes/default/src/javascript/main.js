@@ -48,13 +48,14 @@
 	force = d3.layout.force()
 		.nodes(nodes)
 		.links(links)
-		.friction(0.9)
-		.charge(function(d){
-			return -1500;
-			// return (d.index === current.index) ? -100 : -4000;
+		.friction(0.8)
+		.gravity(0.2)
+		.charge(-3100)
+		.linkStrength(function(d){
+			return (selected && selected.bib == d.bib) ? 1 : 0.5;
 		})
 		.linkDistance(function(d){
-			return 100*(1.5-d.value);
+			return 60*(1.5-d.value);
 		})
 		.size([width, height])
 		.on('tick', tick);
@@ -180,6 +181,14 @@
 				expandNode(node);
 			}
 			selectNode(node);
+
+			// Clean up stray nodes
+			nodes.forEach(function(n){
+				if (n != selected && linksByNode(n).length < 1) {
+					removeNode(n);
+				}
+			});
+
 		}, 5000);
 	}
 

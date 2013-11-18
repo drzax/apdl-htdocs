@@ -249,10 +249,10 @@ var svgIconConfig = {
     dataCache = [];
     nodes = [];
     links = [];
-    force = d3.layout.force().nodes(nodes).links(links).friction(.9).charge(function(d) {
-        return -1500;
+    force = d3.layout.force().nodes(nodes).links(links).friction(.8).gravity(.2).charge(-3100).linkStrength(function(d) {
+        return selected && selected.bib == d.bib ? 1 : .5;
     }).linkDistance(function(d) {
-        return 100 * (1.5 - d.value);
+        return 60 * (1.5 - d.value);
     }).size([ width, height ]).on("tick", tick);
     drag = force.drag().on("drag", function(d) {
         d.fixed = true;
@@ -337,6 +337,11 @@ var svgIconConfig = {
                 expandNode(node);
             }
             selectNode(node);
+            nodes.forEach(function(n) {
+                if (n != selected && linksByNode(n).length < 1) {
+                    removeNode(n);
+                }
+            });
         }, 5e3);
     }
     function selectNode(d) {
