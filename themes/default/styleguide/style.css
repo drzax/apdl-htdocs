@@ -337,11 +337,16 @@ table {
   border-collapse: collapse;
   border-spacing: 0; }
 
+body {
+  font-family: "Playfair Display", serif;
+  color: #221d0d; }
+
 h1, h2, h3, h4, h5 {
-  font-family: 'Playfair Display', serif; }
+  font-family: "Playfair Display", serif; }
 
 h1, h2, h3, h4 {
-  font-weight: 400; }
+  font-weight: 400;
+  color: #645827; }
 
 h1 {
   font-style: italic;
@@ -351,7 +356,6 @@ h1 {
   position: relative;
   font-size: 38px; }
   h1.site-title {
-    -webkit-transition: all 2s ease-in-out;
     border-bottom: none;
     z-index: 10; }
     h1.site-title a {
@@ -368,7 +372,9 @@ h1 {
         color: white; }
 
 .CatalogueItem .site-title {
-  -webkit-transform: scale(0.7); }
+  position: absolute;
+  bottom: 0px;
+  left: 50px; }
 
 a {
   color: #308fd9; }
@@ -495,18 +501,8 @@ body,
   cursor: pointer;
   z-index: 11; }
 
-#search {
-  font-size: 1.5em;
-  line-height: 2em; }
-
-#graph {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 0; }
-
 #info-panel {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.8);
   border-radius: 1em;
   position: absolute;
   top: 30px;
@@ -514,13 +510,24 @@ body,
   bottom: 30px;
   width: 25%;
   padding: 1em;
-  overflow: auto; }
+  overflow: auto;
+  text-align: left; }
+  #info-panel .heading {
+    border-bottom: 1px solid rgba(126, 126, 126, 0.3);
+    padding-bottom: 1em;
+    margin: 0 0 1em 0; }
   #info-panel .item-title {
     font-style: italic;
-    margin: 0 0 1em 0;
     font-size: 1em;
-    border-bottom: 1px solid rgba(126, 126, 126, 0.3);
-    padding-bottom: 1em; }
+    margin: 0; }
+  #info-panel .item-author {
+    display: block;
+    font-size: .8em;
+    margin: 0;
+    color: #a89341; }
+
+#bookmark-this {
+  display: none; }
 
 #node-tools {
   position: absolute;
@@ -539,6 +546,12 @@ body,
 fieldset {
   border: none; }
 
+#graph {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0; }
+
 .node {
   -webkit-transition-property: -webkit-transform;
   -moz-transition-property: -moz-transform;
@@ -556,3 +569,28 @@ fieldset {
   stroke: #999;
   stroke-opacity: .6;
   z-index: 1; }
+
+#search {
+  font-size: 1.5em;
+  line-height: 2em;
+  padding-left: 0.5em;
+  width: 20em; }
+
+.autocomplete-suggestions {
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.8);
+  overflow: auto; }
+
+.autocomplete-suggestion {
+  font-family: "Playfair Display", serif;
+  padding: 1em;
+  border-bottom: 1px solid #fff; }
+  .autocomplete-suggestion .title {
+    font-style: italic; }
+  .autocomplete-suggestion .meta {
+    display: block;
+    font-size: .8em;
+    color: #a89341; }
+
+.autocomplete-selected {
+  background: #f9f7ef; }

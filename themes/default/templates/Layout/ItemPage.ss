@@ -1,7 +1,9 @@
 <div id="graph"></div>
 <div id="info-panel">
-	<h2 class="item-title">$Title</h2>
-	<p class="item-author">$Author</p>
+	<div class="heading">
+		<h2 class="item-title">$Title</h2>
+		<% if Author %><p class="item-author">$Author</p><% end_if %>
+	</div>
 	<div id="timeline"></div>
 </div>
 <div id="node-tools">

@@ -10,6 +10,10 @@
 @import 'compass';
 @import 'mixins';
 
+$main-background-color: #f3efe0;
+$heading-font-family:'Playfair Display', serif;
+$color: scale-lightness($main-background-color, -90);
+
 @import 'lib/normalize.scss'; 
 @import 'typography'; 
 @import 'layout';
@@ -19,3 +23,4 @@
 @import 'modules/sidebar';
 @import 'modules/forms';
 @import 'modules/graph';
+@import 'modules/search';

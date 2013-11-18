@@ -62,7 +62,7 @@
 		searchData = [];
 		for (i=data.items.length;i--;){
 			searchData.unshift({
-				value: data.items[i].Title + ' ' + data.items[i].ISBN + ' ' + data.items[i].Author,
+				value: data.items[i].Title,
 				data: data.items[i]
 			});
 		}
@@ -75,8 +75,20 @@
 				onSelect: function (suggestion) {
 					window.location = window.location.protocol + '//' + window.location.host + '/view/item/' + suggestion.data.BIB;
 				},
+				lookupFilter: function (suggestion, originalQuery, queryLowerCase) {
+					var suggestionString = (suggestion.data.Title || '' + ' ' + suggestion.data.ISBN || '' + ' ' + suggestion.data.Author || '').toLowerCase();
+					return suggestionString.toLowerCase().indexOf(queryLowerCase) !== -1;
+                },
 				formatResult: function(suggestion, currentValue){
-					return suggestion.data.Title;
+					var parts = [], meta = [];
+
+					parts.push('<span class="title">'+suggestion.data.Title+'</span>');
+
+					if (suggestion.data.Author) meta.push('<span class="author">'+suggestion.data.Author+'</span>');
+					if (suggestion.data.ISBN) meta.push('<span class="isbn">ISBN: '+suggestion.data.ISBN+'</span>');
+					if (meta.length) parts.push('<span class="meta">'+meta.join(' ')+'</span>');
+
+					return parts.join(' ');
 				}
 			});
 		});

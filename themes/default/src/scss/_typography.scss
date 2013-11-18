@@ -1,9 +1,14 @@
+body {
+    font-family: $heading-font-family;
+    color: $color;
+}
 h1, h2, h3, h4, h5 {
-	font-family: 'Playfair Display', serif;
+	font-family: $heading-font-family;
 }
 
 h1, h2, h3, h4{
     font-weight: 400;
+    color: scale-lightness($color, 20);
 }
 h1{
     font-style: italic;
@@ -14,7 +19,6 @@ h1{
     font-size: 38px;
 
     &.site-title {
-        -webkit-transition: all 2s ease-in-out;
         border-bottom: none;
         z-index: 10;
         a {
@@ -27,7 +31,9 @@ h1{
 
 .CatalogueItem {
     .site-title {
-        -webkit-transform: scale(.7);
+        position: absolute;
+        bottom: 0px;
+        left: 50px;
     }
 }
 

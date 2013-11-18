@@ -1,0 +1,32 @@
+#search {
+	font-size: 1.5em;
+	line-height: 2em;
+	padding-left: 0.5em;
+	width: 20em;
+}
+
+
+.autocomplete-suggestions {
+	overflow: hidden;
+	background: rgba(255,255,255,0.8);
+	overflow: auto;
+}
+
+.autocomplete-suggestion {
+	font-family: $heading-font-family;
+	padding: 1em;
+	border-bottom: 1px solid #fff;
+	.title {
+		font-style: italic;
+	}
+	.meta {
+		display: block;
+		font-size: .8em;
+		color: scale-lightness($main-background-color, -50);
+	}
+}
+
+.autocomplete-selected {
+	background: scale-lightness($main-background-color, 50);
+
+}

@@ -34,7 +34,7 @@
 	// Initialise width and height
 	width = window.innerWidth;
 	height = window.innerHeight;
-	nodeDiameter = 24;
+	nodeDiameter = 34;
 	nodeScale = 1.5;
 
 	// Initialise the data cache
@@ -76,12 +76,12 @@
 		.attr('id', 'end-arrow')
 		.attr('viewBox', '0 -5 10 10')
 		.attr('refX', 6)
-		.attr('markerWidth', 3)
-		.attr('markerHeight', 3)
+		.attr('markerWidth', 5)
+		.attr('markerHeight', 5)
 		.attr('orient', 'auto')
 	.append('svg:path')
 		.attr('d', 'M0,-5L10,0L0,5')
-		.attr('fill', '#f00');
+		.attr('fill', '#000');
 
 	// Setup d3 collections we need to know about
 	link = svg.selectAll('.link');
@@ -91,7 +91,20 @@
 	title = d3.select('.item-title');
 
 	// Setup window listeners
-	d3.select(window).on("resize", resize).on('mousemove', function(){stop();});
+	d3.select(window)
+		.on("resize", resize)
+		.on('mousemove', function(){
+			stop();
+		})
+		.on('popstate', function(e){
+			var bib;
+			bib = bibFromUrl();
+			if (bib) load(bib, function(err, item){
+				selectNode(makeOrFindNode(item));
+			});
+		});
+
+	// Initial sizing.
 	resize();
 
 	buttons = {
@@ -104,16 +117,20 @@
 	};
 	
 	buttons.expand.selection.on('click', expandOrCollapse);
-	buttons.expand.snap = new svgIcon( buttons.expand.selection[0][0], svgIconConfig, { easing : mina.elastic, speed: 800 } );
+	if ( buttons.expand.selection[0][0]) {
+		buttons.expand.snap = new svgIcon( buttons.expand.selection[0][0], svgIconConfig, { easing : mina.elastic, speed: 800 } );
+	}
+	
 
 	buttons.bookmark.selection.on('click', bookmarkCurrentNode);
-	buttons.bookmark.snap = new svgIcon (buttons.bookmark.selection[0][0], svgIconConfig, {easing : mina.elastic, speed: 800 } );
+	if ( buttons.bookmark.selection[0][0]) {
+		buttons.bookmark.snap = new svgIcon (buttons.bookmark.selection[0][0], svgIconConfig, {easing : mina.elastic, speed: 800 } );
+	}
 
 	// Get started
 	(function(){
-		var match;
-		match = window.location.href.match(/view\/item\/([0-9]+)/);
-		if (match[1]) load(match[1], function(err, item){
+		var bib = bibFromUrl();
+		if (bib) load(bib, function(err, item){
 			var n;
 			n = makeOrFindNode(item);
 			expandNode(n);
@@ -121,6 +138,13 @@
 		});
 		stop();
 	}());
+
+	function bibFromUrl(url) {
+		var match;
+		url = url || window.location.href;
+		match = url.match(/view\/item\/([0-9]+)/);
+		return match[1];
+	}
 
 	function stop() {
 		clearTimeout(playTimeout);
@@ -180,17 +204,21 @@
 		d3.select('.node.current').classed('current', false);
 		d3.select('#node-'+selected.bib).classed('current', true);
 
+		if (selected.bib != bibFromUrl()) {
+			history.pushState(null, null, '/view/item/'+selected.bib);
+		}
+
 		populateInfoPanel(d);
 	}
 
 	function ensureToggled(svgIcon) {
-		if (!svgIcon.toggled) {
+		if (svgIcon && !svgIcon.toggled) {
 			svgIcon.toggle(true);
 		}
 	}
 
 	function ensureUntoggled(svgIcon) {
-		if (svgIcon.toggled) {
+		if (svgIcon && svgIcon.toggled) {
 			svgIcon.toggle(true);
 		}
 	}
@@ -336,8 +364,7 @@
 	function tick() {
 
 		var xOffsetPct = 0.15;
-		var nodeDiameter = 50;
-
+		
 		// draw directed edges with proper padding from node centers
 		link.attr('d', function(d) {
 			var deltaX,
